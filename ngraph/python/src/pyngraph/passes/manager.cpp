@@ -18,7 +18,7 @@
 #include <pybind11/stl.h>
 
 #include "ngraph/pass/manager.hpp"
-#include "ngraph/pass/reshape_elimination.hpp"
+#include "ngraph/pass/pass.hpp"
 #include "pyngraph/passes/manager.hpp"
 
 namespace py = pybind11;
@@ -29,5 +29,5 @@ void regclass_pyngraph_passes_Manager(py::module m)
     manager.doc() = "ngraph.impl.pass.Manager wraps ngraph::pass::Manager";
     manager.def("run_passes", &ngraph::pass::Manager::run_passes);
     manager.def("register_pass",
-                &ngraph::pass::Manager::register_pass<ngraph::pass::ReshapeElimination>);
+                &ngraph::pass::Manager::register_pass<ngraph::pass::PassBase>); // get strings that find spec pass
 }
