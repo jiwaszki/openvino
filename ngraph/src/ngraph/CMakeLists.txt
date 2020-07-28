@@ -469,6 +469,7 @@ set (SRC
     opsets/opset.cpp
     partial_shape.cpp
     partial_shape.hpp
+    pass/manager_wrapper.hpp
     pass/algebraic_simplification.cpp
     pass/algebraic_simplification.hpp
     pass/assign_layout.hpp
