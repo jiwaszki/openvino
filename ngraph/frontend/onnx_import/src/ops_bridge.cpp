@@ -277,7 +277,7 @@ namespace ngraph
             REGISTER_OPERATOR("Clip", 1, clip);
             REGISTER_OPERATOR("Clip", 11, clip);
             REGISTER_OPERATOR("Concat", 1, concat);
-            REGISTER_OPERATOR("ConstantXD", 1, constant);
+            REGISTER_OPERATOR("Constant", 1, constant);
             REGISTER_OPERATOR("ConstantOfShape", 1, constant_of_shape);
             REGISTER_OPERATOR("Conv", 1, conv);
             // REGISTER_OPERATOR("ConvInteger", 1, conv_integer);
