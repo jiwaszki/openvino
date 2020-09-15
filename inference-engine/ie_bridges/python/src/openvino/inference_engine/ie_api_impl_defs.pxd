@@ -41,6 +41,7 @@ cdef extern from "<inference_engine.hpp>" namespace "InferenceEngine":
         void setPrecision(const Precision& precision) const
         const SizeVector getDims() except +
         const string& getName() except +
+        void setName(const string& newName) except +
         const Layout getLayout() except +
         void setLayout(Layout layout) except +
         const bool isInitialized() except +

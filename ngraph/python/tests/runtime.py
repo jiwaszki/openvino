@@ -59,9 +59,14 @@ class Runtime(object):
     def computation(self, node_or_function: Union[Node, Function], *inputs: Node) -> "Computation":
         """Return a callable Computation object."""
         if isinstance(node_or_function, Node):
+            print("eluwina")
+            print(node_or_function.name)
             ng_function = Function(node_or_function, inputs, node_or_function.name)
             return Computation(self, ng_function)
         elif isinstance(node_or_function, Function):
+            print("jooo")
+            print(node_or_function)
+            print(inputs)
             return Computation(self, node_or_function)
         else:
             raise TypeError(
@@ -100,6 +105,68 @@ class Computation(object):
             self.network_cache[str(input_shapes)] = cnn_network
         else:
             cnn_network = self.network_cache[str(input_shapes)]
+
+        print(cnn_network.input_info)
+        for cnn_input in cnn_network.input_info:
+            if cnn_network.input_info[cnn_input].precision == "I64":
+                cnn_network.input_info[cnn_input].precision = "I32"
+            print(cnn_network.input_info[cnn_input].precision)
+        
+        # Not sure if there is a need, always running into: data [name_of_output] does not exist
+        print(cnn_network.outputs)
+        for cnn_output in cnn_network.outputs:
+            if cnn_network.outputs[cnn_output].precision == "I64":
+                cnn_network.outputs[cnn_output].precision = "I32"
+            print(cnn_network.outputs[cnn_output].precision)
+
+        for layer in cnn_network.layers:
+            for dataptr in cnn_network.layers[layer].in_data:
+                if dataptr.precision == "I64":
+                    dataptr.precision = "I32"
+                if dataptr.precision in ["FP64", "U64", "FP16"]:
+                    print("XD")
+            for dataptr in cnn_network.layers[layer].out_data:
+                if dataptr.precision == "I64":
+                    dataptr.precision = "I32"
+                if dataptr.precision in ["FP64", "U64", "FP16"]:
+                    print("XD")
+
+        # print(cnn_network.layers)
+
+        print("================")
+
+        for xd in cnn_network.layers:
+            if "Constant" in xd: 
+                new_name = "Parameter" + xd[8:]
+                cnn_network.layers[xd].name = new_name
+
+        print(cnn_network.layers["unique_ids:0"].type)
+        print(cnn_network.layers["unique_ids:0"].params)
+        print(cnn_network.layers["unique_ids:0"].parents)
+        # for i in range(0, len(cnn_network.layers["unique_ids:0"].parents)):
+        #     if "Constant" in cnn_network.layers["unique_ids:0"].parents[i]:
+        #         new_name = "Parameter" + (cnn_network.layers["unique_ids:0"].parents[i])[8:]
+        #         cnn_network.layers["unique_ids:0"].parents[i] = new_name
+        #     # print(lay)
+        #     # print(cnn_network.layers[lay].params)
+        # for i in range(0, len(cnn_network.layers["unique_ids:0"].children)):
+        #     if "Constant" in cnn_network.layers["unique_ids:0"].children[i]:
+        #         new_name = "Parameter" + (cnn_network.layers["unique_ids:0"].children[i])[8:]
+        #         cnn_network.layers["unique_ids:0"].children[i] = new_name
+        #     # print(lay)
+        #     # print(cnn_network.layers[lay].params)                   
+        # for dataptr in cnn_network.layers["unique_ids:0"].in_data:
+        #     if "Constant" in dataptr.name:
+        #         new_name = "Parameter" + dataptr.name[8:]
+        #         dataptr.name = new_name
+        #     print(dataptr.name)
+        #     print(dataptr.precision)
+        # for dataptr in cnn_network.layers["unique_ids:0"].out_data:
+        #     if "Constant" in dataptr.name:
+        #         new_name = "Parameter" + dataptr.name[8:]
+        #         dataptr.name = new_name
+        #     print(dataptr.name)
+        #     print(dataptr.precision)
 
         executable_network = self.runtime.backend.load_network(cnn_network, self.runtime.backend_name)
 

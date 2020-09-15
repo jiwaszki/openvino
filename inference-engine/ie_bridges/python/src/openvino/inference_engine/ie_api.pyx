@@ -700,6 +700,9 @@ cdef class DataPtr:
     @property
     def name(self):
         return deref(self._ptr).getName().decode()
+    @name.setter
+    def name(self, new_name):
+        deref(self._ptr).setName(new_name.encode())
 
     ## Precision of the data object
     @property
@@ -1275,6 +1278,9 @@ cdef class IENetLayer:
     @property
     def name(self):
         return deref(self._ptr).name.decode()
+    @name.setter
+    def name(self, new_name):
+        deref(self._ptr).name = new_name.encode()
 
     ## Layer type
     @property
