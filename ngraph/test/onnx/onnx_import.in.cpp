@@ -2382,6 +2382,18 @@ NGRAPH_TEST(${BACKEND_NAME}, onnx_model_round_half_nearest_even)
     test_case.run();
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, onnx_model_round_half_away_from_zero)
+{
+    const auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/round_half_away_from_zero.prototxt"));
+    auto test_case = test::TestCase<TestEngine>(function);
+
+    test_case.add_input<float>({0.5f, 2.5f, -1.5f, -2.5f});
+    test_case.add_expected_output<float>({1.f, 3.f, -2.f, -3.f});
+
+    test_case.run();
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, onnx_model_scatter10_import_only)
 {
     const auto scatter_fn = onnx_import::import_onnx_model(
