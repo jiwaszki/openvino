@@ -5,11 +5,6 @@ graph {
     input: "x"
     output: "y"
     op_type: "Round"
-    attribute {
-      name: "mode"
-      i: 0
-      type: INT
-    }
   }
   name: "test_round"
   input {

@@ -879,7 +879,6 @@ convert_uint16_float32
 # Unsupported primitive of type: Round
 IE_CPU.onnx_model_round
 IE_CPU.onnx_model_round_half_nearest_even
-IE_CPU.onnx_model_round_half_away_from_zero
 
 # Unsupported primitive of type: Ceiling
 ceiling

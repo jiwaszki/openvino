@@ -34,8 +34,7 @@ namespace ngraph
                 {
                     return {std::make_shared<default_opset::Round>(
                         node.get_ng_inputs().at(0),
-                        static_cast<default_opset::Round::RoundMode>(
-                            node.get_attribute_value<int64_t>("mode", 0)))};
+                        default_opset::Round::RoundMode::HALF_TO_EVEN)};
                 }
             } // namespace set_1
 
