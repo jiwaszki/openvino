@@ -92,7 +92,7 @@ public:
                 // Acquire GIL, execute Python function and add idle handle to queue
                 // release GIL afterwards
                 py::gil_scoped_acquire acquire;
-                f_callback(_user_ids[handle], handle);
+                f_callback(_requests[handle], _user_ids[handle]);
                 _idle_handles.push(handle);
                 py::gil_scoped_release release;
                 // Notify locks in getIdleRequestId() or waitAll() functions

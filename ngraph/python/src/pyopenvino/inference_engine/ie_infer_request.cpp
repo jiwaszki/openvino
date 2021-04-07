@@ -49,9 +49,10 @@ void regclass_InferRequest(py::module m)
 
     cls.def("infer", &InferenceEngine::InferRequest::Infer);
 
-    cls.def("async_infer",
-            &InferenceEngine::InferRequest::StartAsync,
-            py::call_guard<py::gil_scoped_release>());
+    cls.def("async_infer", [](InferenceEngine::InferRequest& self) {
+        py::gil_scoped_release release;
+        self.StartAsync();
+    });
 
     cls.def("set_blob", [](InferenceEngine::InferRequest& self,
                            const std::string& name,
@@ -66,17 +67,20 @@ void regclass_InferRequest(py::module m)
         self.SetBlob(name, Common::cast_to_blob(blob));
     });
 
-    cls.def("wait",
-            &InferenceEngine::InferRequest::Wait,
-            py::arg("millis_timeout") = InferenceEngine::IInferRequest::WaitMode::RESULT_READY,
-            py::call_guard<py::gil_scoped_acquire>());
+    cls.def(
+        "wait",
+        [](InferenceEngine::InferRequest& self, int64_t millis_timeout) {
+            py::gil_scoped_acquire acquire;
+            return self.Wait(millis_timeout);
+        },
+        py::arg("millis_timeout") = InferenceEngine::IInferRequest::WaitMode::RESULT_READY);
 
     cls.def("set_completion_callback",
-            [](InferenceEngine::InferRequest* self, py::function f_callback) {
-                self->SetCompletionCallback([f_callback]() {
-                    py::gil_scoped_acquire acquire;
-                    f_callback();
-                    py::gil_scoped_release release;
+            [](InferenceEngine::InferRequest& self, py::function f_callback) {
+                self.SetCompletionCallback([self, f_callback]() {
+                    // py::gil_scoped_acquire acquire;
+                    f_callback(self);
+                    // py::gil_scoped_release release;
                 });
             });
 
