@@ -124,7 +124,7 @@ void regclass_InferQueue(py::module m)
         }
 
         return new InferQueue(requests, idle_handles, user_ids);
-    }));
+    }), py::arg("network"), py::arg("jobs") = 0);
 
     cls.def("infer", [](InferQueue& self, py::object user_id, const py::dict inputs) {
         // getIdleRequestId function has an intention to block InferQueue
