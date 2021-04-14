@@ -65,7 +65,10 @@ void regclass_InferRequest(py::module m)
         return results;
     }, py::arg("inputs"));
 
-    cls.def("async_infer", [](InferRequestWrapper& self) {
+    cls.def("_async_infer", [](InferRequestWrapper& self, const py::dict inputs) {
+        if (!inputs.empty()) {
+            Common::set_request_blobs(self._requests[handle], inputs);
+        }
         py::gil_scoped_release release;
         self.StartAsync();
     });

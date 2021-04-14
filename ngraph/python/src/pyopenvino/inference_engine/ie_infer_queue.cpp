@@ -126,22 +126,19 @@ void regclass_InferQueue(py::module m)
         return new InferQueue(requests, idle_handles, user_ids);
     }), py::arg("network"), py::arg("jobs") = 0);
 
-    cls.def("infer", [](InferQueue& self, py::object user_id, const py::dict inputs) {
+    cls.def("_async_infer", [](InferQueue& self, const py::dict inputs, py::object userdata) {
         // getIdleRequestId function has an intention to block InferQueue
         // until there is at least one idle (free to use) InferRequest
         auto handle = self.getIdleRequestId();
         // Set new inputs label/id from user
-        self._user_ids[handle] = user_id;
+        self._user_ids[handle] = userdata;
         // Now GIL can be released since every instruction from this point
         // use unique handle
-        py::gil_scoped_release release;
         // Update inputs of picked InferRequest
-        for (auto&& input : inputs)
-        {
-            auto name = input.first.cast<std::string>();
-            auto blob = Common::cast_to_blob(input.second);
-            self._requests[handle].SetBlob(name, blob);
+        if (!inputs.empty()) {
+            Common::set_request_blobs(self._requests[handle], inputs);
         }
+        py::gil_scoped_release release;
         // Start InferRequest in asynchronus mode
         self._requests[handle].StartAsync();
     });
