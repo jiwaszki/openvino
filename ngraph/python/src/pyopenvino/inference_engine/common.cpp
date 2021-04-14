@@ -166,6 +166,32 @@ namespace Common
         }
     }
 
+    bool is_TBlob(const py::handle& blob) {
+        if (py::isinstance<InferenceEngine::TBlob<float>>(blob)) {
+            return true;
+        } else if (py::isinstance<InferenceEngine::TBlob<double>>(blob)) {
+            return true;
+        } else if (py::isinstance<InferenceEngine::TBlob<int8_t>>(blob)) {
+            return true;
+        } else if (py::isinstance<InferenceEngine::TBlob<int16_t>>(blob)) {
+            return true;
+        } else if (py::isinstance<InferenceEngine::TBlob<int32_t>>(blob)) {
+            return true;
+        } else if (py::isinstance<InferenceEngine::TBlob<int64_t>>(blob)) {
+            return true;
+        } else if (py::isinstance<InferenceEngine::TBlob<uint8_t>>(blob)) {
+            return true;
+        } else if (py::isinstance<InferenceEngine::TBlob<uint16_t>>(blob)) {
+            return true;
+        } else if (py::isinstance<InferenceEngine::TBlob<uint32_t>>(blob)) {
+            return true;
+        } else if (py::isinstance<InferenceEngine::TBlob<uint64_t>>(blob)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     const std::shared_ptr<InferenceEngine::Blob> cast_to_blob(const py::handle& blob) {
         if (py::isinstance<InferenceEngine::TBlob<float>>(blob)) {
             return blob.cast<const std::shared_ptr<InferenceEngine::TBlob<float>> &>();
@@ -189,6 +215,49 @@ namespace Common
             return blob.cast<const std::shared_ptr<InferenceEngine::TBlob<uint64_t>> &>();
         } else {
             // Throw error
+            py::print("Error when casting.");
+        }
+    }
+
+    const std::shared_ptr<InferenceEngine::Blob> blob_from_numpy(const py::handle& arr) {
+        if (py::isinstance<py::array_t<float>>(arr)) {
+            return Common::create_blob_from_numpy<float>(arr, InferenceEngine::Precision::FP32);
+        } else if (py::isinstance<py::array_t<double>>(arr)) {
+            return Common::create_blob_from_numpy<double>(arr, InferenceEngine::Precision::FP64);
+        } else if (py::isinstance<py::array_t<int8_t>>(arr)) {
+            return Common::create_blob_from_numpy<int8_t>(arr, InferenceEngine::Precision::I8);
+        } else if (py::isinstance<py::array_t<int16_t>>(arr)) {
+            return Common::create_blob_from_numpy<int16_t>(arr, InferenceEngine::Precision::I16);
+        } else if (py::isinstance<py::array_t<int32_t>>(arr)) {
+            return Common::create_blob_from_numpy<int32_t>(arr, InferenceEngine::Precision::I32);
+        } else if (py::isinstance<py::array_t<int64_t>>(arr)) {
+            return Common::create_blob_from_numpy<int64_t>(arr, InferenceEngine::Precision::I64);
+        } else if (py::isinstance<py::array_t<uint8_t>>(arr)) {
+            return Common::create_blob_from_numpy<uint8_t>(arr, InferenceEngine::Precision::U8);
+        } else if (py::isinstance<py::array_t<uint16_t>>(arr)) {
+            return Common::create_blob_from_numpy<uint16_t>(arr, InferenceEngine::Precision::U16);
+        } else if (py::isinstance<py::array_t<uint32_t>>(arr)) {
+            return Common::create_blob_from_numpy<uint32_t>(arr, InferenceEngine::Precision::U32);
+        } else if (py::isinstance<py::array_t<uint64_t>>(arr)) {
+            return Common::create_blob_from_numpy<uint64_t>(arr, InferenceEngine::Precision::U64);
+        } else {
+            py::print("Error when creating.");
+        }
+    }
+
+    void set_request_blobs(InferenceEngine::InferRequest& request, const py::dict& dictonary) {
+        for (auto&& pair : dictonary) {
+            const std::string& name = pair.first.cast<std::string>();
+            if (py::isinstance<py::array>(pair.second)) {
+                // py::print("Numpy array path.");
+                request.SetBlob(name, Common::blob_from_numpy(pair.second));
+            }
+            else if (is_TBlob(pair.second)) {
+                // py::print("Custom Blob path.");
+                request.SetBlob(name, Common::cast_to_blob(pair.second));
+            } else {
+                py::print("Error when setting.");
+            }
         }
     }
 
