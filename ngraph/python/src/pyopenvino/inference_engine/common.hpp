@@ -18,27 +18,17 @@ namespace py = pybind11;
 namespace Common
 {
     template <typename T>
-    const std::shared_ptr<InferenceEngine::TBlob<T>>
-        create_blob_from_numpy(const py::handle& py_array, InferenceEngine::Precision precision)
+    void fill_blob(const py::handle& py_array, InferenceEngine::Blob::Ptr blob)
     {
         py::array_t<T> arr = py::cast<py::array>(py_array);
-        InferenceEngine::SizeVector dims;
-        for (size_t i = 0; i < arr.ndim(); i++)
-        {
-            dims.push_back(arr.shape(i));
-        }
-        auto desc = InferenceEngine::TensorDesc(
-            precision,
-            dims,
-            InferenceEngine::Layout::NCHW); // TODO: select Layout based on dims
-        auto blob = InferenceEngine::make_shared_blob<T>(desc);
-        blob->allocate();
-        if (arr.size() != 0)
-        {
+        if (arr.size() != 0) {
+            // blob->allocate();
+            InferenceEngine::MemoryBlob::Ptr mem_blob = InferenceEngine::as<InferenceEngine::MemoryBlob>(blob);
             std::copy(
-                arr.data(0), arr.data(0) + arr.size(), blob->rwmap().template as<T*>());
+                arr.data(0), arr.data(0) + arr.size(), mem_blob->rwmap().as<T*>());
+        } else {
+            py::print("Empty array!");
         }
-        return blob;
     }
 
     InferenceEngine::Layout get_layout_from_string(const std::string& layout);
@@ -53,7 +43,7 @@ namespace Common
 
     const std::shared_ptr<InferenceEngine::Blob> cast_to_blob(const py::handle& blob);
 
-    const std::shared_ptr<InferenceEngine::Blob> blob_from_numpy(const py::handle& _arr);
+    void blob_from_numpy(const py::handle& _arr, InferenceEngine::Blob::Ptr &blob);
 
     void set_request_blobs(InferenceEngine::InferRequest& request, const py::dict& dictonary);
 }; // namespace Common

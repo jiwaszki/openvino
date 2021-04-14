@@ -219,27 +219,27 @@ namespace Common
         }
     }
 
-    const std::shared_ptr<InferenceEngine::Blob> blob_from_numpy(const py::handle& arr) {
+    void blob_from_numpy(const py::handle& arr, InferenceEngine::Blob::Ptr blob) {
         if (py::isinstance<py::array_t<float>>(arr)) {
-            return Common::create_blob_from_numpy<float>(arr, InferenceEngine::Precision::FP32);
+            Common::fill_blob<float>(arr, blob);
         } else if (py::isinstance<py::array_t<double>>(arr)) {
-            return Common::create_blob_from_numpy<double>(arr, InferenceEngine::Precision::FP64);
+            Common::fill_blob<double>(arr, blob);
         } else if (py::isinstance<py::array_t<int8_t>>(arr)) {
-            return Common::create_blob_from_numpy<int8_t>(arr, InferenceEngine::Precision::I8);
+            Common::fill_blob<int8_t>(arr, blob);
         } else if (py::isinstance<py::array_t<int16_t>>(arr)) {
-            return Common::create_blob_from_numpy<int16_t>(arr, InferenceEngine::Precision::I16);
+            Common::fill_blob<int16_t>(arr, blob);
         } else if (py::isinstance<py::array_t<int32_t>>(arr)) {
-            return Common::create_blob_from_numpy<int32_t>(arr, InferenceEngine::Precision::I32);
+            Common::fill_blob<int32_t>(arr, blob);
         } else if (py::isinstance<py::array_t<int64_t>>(arr)) {
-            return Common::create_blob_from_numpy<int64_t>(arr, InferenceEngine::Precision::I64);
+            Common::fill_blob<int64_t>(arr, blob);
         } else if (py::isinstance<py::array_t<uint8_t>>(arr)) {
-            return Common::create_blob_from_numpy<uint8_t>(arr, InferenceEngine::Precision::U8);
+            Common::fill_blob<uint8_t>(arr, blob);
         } else if (py::isinstance<py::array_t<uint16_t>>(arr)) {
-            return Common::create_blob_from_numpy<uint16_t>(arr, InferenceEngine::Precision::U16);
+            Common::fill_blob<uint16_t>(arr, blob);
         } else if (py::isinstance<py::array_t<uint32_t>>(arr)) {
-            return Common::create_blob_from_numpy<uint32_t>(arr, InferenceEngine::Precision::U32);
+            Common::fill_blob<uint32_t>(arr, blob);
         } else if (py::isinstance<py::array_t<uint64_t>>(arr)) {
-            return Common::create_blob_from_numpy<uint64_t>(arr, InferenceEngine::Precision::U64);
+            Common::fill_blob<uint64_t>(arr, blob);
         } else {
             py::print("Error when creating.");
         }
@@ -250,7 +250,7 @@ namespace Common
             const std::string& name = pair.first.cast<std::string>();
             if (py::isinstance<py::array>(pair.second)) {
                 // py::print("Numpy array path.");
-                request.SetBlob(name, Common::blob_from_numpy(pair.second));
+                Common::blob_from_numpy(pair.second, request.GetBlob(name));
             }
             else if (is_TBlob(pair.second)) {
                 // py::print("Custom Blob path.");
