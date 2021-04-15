@@ -42,6 +42,11 @@ def infer(request, inputs: dict = {}):
     return request._infer(inputs=normalize_inputs(inputs))
 
 
+def async_infer(request, inputs: dict = {}, userdata=None):
+    request._async_infer(inputs=normalize_inputs(inputs),
+                         userdata=userdata)
+
+
 # Dispatch Blob types on Python side.
 class BlobWrapper:
     def __new__(cls, tensor_desc : TensorDesc, arr : np.ndarray = None):

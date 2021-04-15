@@ -65,30 +65,54 @@ void regclass_InferRequest(py::module m)
         return results;
     }, py::arg("inputs"));
 
-    cls.def("_async_infer", [](InferRequestWrapper& self, const py::dict inputs) {
-        if (!inputs.empty()) {
-            Common::set_request_blobs(self, inputs);
-        }
-        py::gil_scoped_release release;
-        self.StartAsync();
-    });
+    cls.def(
+        "_async_infer",
+        [](InferRequestWrapper& self, const py::dict inputs, py::object userdata) {
+            py::gil_scoped_release release;
+            if (!inputs.empty())
+            {
+                Common::set_request_blobs(self, inputs);
+            }
+            // TODO: check for None so next async infer userdata can be updated
+            // if (!userdata.empty())
+            // {
+            //     if (user_callback_defined)
+            //     {
+            //         self.SetCompletionCallback([self, userdata]() {
+            //             // py::gil_scoped_acquire acquire;
+            //             auto statusCode = const_cast<InferRequestWrapper&>(self).Wait(
+            //                 InferenceEngine::IInferRequest::WaitMode::STATUS_ONLY);
+            //             self.user_callback(self, statusCode, userdata);
+            //             // py::gil_scoped_release release;
+            //         });
+            //     }
+            //     else
+            //     {
+            //         py::print("There is no callback function!");
+            //     }
+            // }
+            self.StartAsync();
+        },
+        py::arg("inputs"),
+        py::arg("userdata"));
 
     cls.def(
         "wait",
         [](InferRequestWrapper& self, int64_t millis_timeout) {
-            py::gil_scoped_acquire acquire;
+            py::gil_scoped_release release;
             return self.Wait(millis_timeout);
         },
         py::arg("millis_timeout") = InferenceEngine::IInferRequest::WaitMode::RESULT_READY);
 
     cls.def("set_completion_callback",
-            [](InferRequestWrapper& self, py::function f_callback) {
-                self.SetCompletionCallback([self, f_callback]() {
-                    // py::gil_scoped_acquire acquire;
-                    f_callback(self);
-                    // py::gil_scoped_release release;
+            [](InferRequestWrapper& self, py::function f_callback, py::object userdata) {
+                // self.user_callback_defined = true;
+                // self.user_callback = callback;
+                self.SetCompletionCallback([self, f_callback, userdata]() {
+                    py::gil_scoped_acquire acquire;
+                    f_callback(self, userdata);
                 });
-            }, py::arg("f_callback"));
+            }, py::arg("f_callback"), py::arg("userdata"));
 
     cls.def("get_perf_counts", [](InferRequestWrapper& self) {
         std::map<std::string, InferenceEngine::InferenceEngineProfileInfo> perfMap;
@@ -146,10 +170,6 @@ void regclass_InferRequest(py::module m)
         }
         return output_blobs;
     });
-
-    // cls.def("__del__", [](InferRequestWrapper& self) {
-    //     InferenceEngine::InferRequest::actual = nullptr;
-    // });
 
     //    latency
 }

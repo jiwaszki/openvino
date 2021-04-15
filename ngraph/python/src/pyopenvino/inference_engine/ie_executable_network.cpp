@@ -20,8 +20,12 @@ void regclass_ExecutableNetwork(py::module m)
 
     cls.def("create_infer_request", [](InferenceEngine::ExecutableNetwork& self) {
         auto request = static_cast<InferRequestWrapper>(self.CreateInferRequest());
+        // Set empty callback
+        request.SetCompletionCallback([](){});
+        // Get Inputs and Outputs info from executable network
         request._inputsInfo = self.GetInputsInfo();
         request._outputsInfo = self.GetOutputsInfo();
+        // request.user_callback_defined = false;
         return request;
     });
 
@@ -67,8 +71,6 @@ void regclass_ExecutableNetwork(py::module m)
         },
         py::arg("metric_name"));
 
-    //    cls.def("wait", &InferenceEngine::ExecutableNetwork::CreateInferRequest);
-
     cls.def_property_readonly("input_info", [](InferenceEngine::ExecutableNetwork& self) {
         Containers::PyConstInputsDataMap inputs;
         const InferenceEngine::ConstInputsDataMap& inputsInfo = self.GetInputsInfo();
@@ -88,5 +90,4 @@ void regclass_ExecutableNetwork(py::module m)
         }
         return outputs;
     });
-    //    cls.def_property_readonly("requests", &InferenceEngine::ExecutableNetwork::name);
 }

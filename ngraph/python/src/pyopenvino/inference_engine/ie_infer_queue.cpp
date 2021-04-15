@@ -17,6 +17,7 @@
 #include <ie_iinfer_request.hpp>
 
 #include "pyopenvino/inference_engine/common.hpp"
+#include "pyopenvino/inference_engine/ie_infer_request.hpp"
 #include "pyopenvino/inference_engine/ie_infer_queue.hpp"
 
 namespace py = pybind11;
@@ -24,7 +25,7 @@ namespace py = pybind11;
 class InferQueue
 {
 public:
-    InferQueue(std::vector<InferenceEngine::InferRequest> requests,
+    InferQueue(std::vector<InferRequestWrapper> requests,
                std::queue<size_t> idle_handles,
                std::vector<py::object> user_ids)
         : _requests(requests)
@@ -42,7 +43,6 @@ public:
         py::gil_scoped_release release;
         std::unique_lock<std::mutex> lock(_mutex);
         _cv.wait(lock, [this] { return !(_idle_handles.empty()); });
-        py::gil_scoped_acquire acquire;
 
         size_t idle_request_id = _idle_handles.front();
         _idle_handles.pop();
@@ -57,7 +57,6 @@ public:
         py::gil_scoped_release release;
         std::unique_lock<std::mutex> lock(_mutex);
         _cv.wait(lock, [this] { return _idle_handles.size() == _requests.size(); });
-        py::gil_scoped_acquire acquire;
 
         std::vector<InferenceEngine::StatusCode> statuses;
 
@@ -72,13 +71,11 @@ public:
 
     void setDefaultCallbacks()
     {
-        py::function f_callback;
         for (size_t handle = 0; handle < _requests.size(); handle++)
         {
             _requests[handle].SetCompletionCallback([this, handle /* ... */]() {
                 py::gil_scoped_acquire acquire;
                 _idle_handles.push(handle);
-                py::gil_scoped_release release;
                 _cv.notify_one();
             });
         }
@@ -89,19 +86,18 @@ public:
         for (size_t handle = 0; handle < _requests.size(); handle++)
         {
             _requests[handle].SetCompletionCallback([this, f_callback, handle /* ... */]() {
-                // Acquire GIL, execute Python function and add idle handle to queue
-                // release GIL afterwards
+                // Acquire GIL, execute Python function
                 py::gil_scoped_acquire acquire;
                 f_callback(_requests[handle], _user_ids[handle]);
+                // Add idle handle to queue
                 _idle_handles.push(handle);
-                py::gil_scoped_release release;
                 // Notify locks in getIdleRequestId() or waitAll() functions
                 _cv.notify_one();
             });
         }
     }
 
-    std::vector<InferenceEngine::InferRequest> _requests;
+    std::vector<InferRequestWrapper> _requests;
     std::vector<py::object> _user_ids; // user ID can be any Python object
     std::queue<size_t> _idle_handles;
     std::mutex _mutex;
@@ -113,13 +109,18 @@ void regclass_InferQueue(py::module m)
     py::class_<InferQueue, std::shared_ptr<InferQueue>> cls(m, "InferQueue");
 
     cls.def(py::init([](InferenceEngine::ExecutableNetwork& net, size_t jobs) {
-        std::vector<InferenceEngine::InferRequest> requests;
+        std::vector<InferRequestWrapper> requests;
         std::queue<size_t> idle_handles;
         std::vector<py::object> user_ids(jobs);
 
         for (size_t handle = 0; handle < jobs; handle++)
         {
-            requests.push_back(net.CreateInferRequest());
+            auto request = static_cast<InferRequestWrapper>(net.CreateInferRequest());
+            // Get Inputs and Outputs info from executable network
+            request._inputsInfo = net.GetInputsInfo();
+            request._outputsInfo = net.GetOutputsInfo();
+
+            requests.push_back(request);
             idle_handles.push(handle);
         }
 
@@ -132,16 +133,17 @@ void regclass_InferQueue(py::module m)
         auto handle = self.getIdleRequestId();
         // Set new inputs label/id from user
         self._user_ids[handle] = userdata;
-        // Now GIL can be released since every instruction from this point
-        // use unique handle
         // Update inputs of picked InferRequest
         if (!inputs.empty()) {
             Common::set_request_blobs(self._requests[handle], inputs);
         }
-        py::gil_scoped_release release;
-        // Start InferRequest in asynchronus mode
-        self._requests[handle].StartAsync();
-    });
+        // Now GIL can be released
+        {
+            py::gil_scoped_release release;
+            // Start InferRequest in asynchronus mode
+            self._requests[handle].StartAsync();
+        }
+    }, py::arg("inputs"), py::arg("userdata"));
 
     cls.def("wait_all", [](InferQueue& self) { return self.waitAll(); });
 

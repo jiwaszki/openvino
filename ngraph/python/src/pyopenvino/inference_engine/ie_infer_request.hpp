@@ -18,6 +18,8 @@ public:
 
     // ~InferRequestWrapper() = default;
 
+    // bool user_callback_defined;
+    // py::function user_callback;
     InferenceEngine::ConstInputsDataMap _inputsInfo;
     InferenceEngine::ConstOutputsDataMap _outputsInfo;
 };

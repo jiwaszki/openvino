@@ -25,8 +25,12 @@ from openvino.inference_engine.ie_api import BlobWrapper
 # from openvino.inference_engine.ie_api import ExecutableNetworkWrapper
 
 from openvino.inference_engine.ie_api import infer
+from openvino.inference_engine.ie_api import async_infer
 
 # Patching for Blob class
 Blob = BlobWrapper
+# Patching infer methods
 ExecutableNetwork.infer = infer
 InferRequest.infer = infer
+InferRequest.async_infer = async_infer
+InferQueue.async_infer = async_infer
