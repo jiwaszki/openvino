@@ -20,8 +20,6 @@ void regclass_ExecutableNetwork(py::module m)
 
     cls.def("create_infer_request", [](InferenceEngine::ExecutableNetwork& self) {
         auto request = static_cast<InferRequestWrapper>(self.CreateInferRequest());
-        // Set empty callback
-        request.SetCompletionCallback([](){});
         // Get Inputs and Outputs info from executable network
         request._inputsInfo = self.GetInputsInfo();
         request._outputsInfo = self.GetOutputsInfo();
