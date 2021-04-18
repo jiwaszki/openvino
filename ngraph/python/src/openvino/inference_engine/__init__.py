@@ -22,15 +22,17 @@ from openvino.pyopenvino import ColorFormat
 from openvino.pyopenvino import PreProcessChannel
 
 from openvino.inference_engine.ie_api import BlobWrapper
-# from openvino.inference_engine.ie_api import ExecutableNetworkWrapper
-
 from openvino.inference_engine.ie_api import infer
 from openvino.inference_engine.ie_api import async_infer
+from openvino.inference_engine.ie_api import get_result
 
 # Patching for Blob class
 Blob = BlobWrapper
-# Patching infer methods
+# Patching ExecutableNetwork
 ExecutableNetwork.infer = infer
+# Patching InferRequest
 InferRequest.infer = infer
 InferRequest.async_infer = async_infer
+InferRequest.get_result = get_result
+# Patching InferQueue
 InferQueue.async_infer = async_infer
