@@ -52,10 +52,10 @@ result_infer_request = request.infer()
 result_infer_request = request.infer({'data': img})
 
 for key in executable_network.output_info:
-    print(result_infer_request[key].buffer)
-    print(result_executable_network[key].buffer)
-    assert np.allclose(result_infer_request[key].buffer,
-                       result_executable_network[key].buffer)
+    print(result_infer_request[key])
+    print(result_executable_network[key])
+    assert np.allclose(result_infer_request[key],
+                       result_executable_network[key])
 
 
 # TODO: When callback if present everything works

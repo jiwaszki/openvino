@@ -86,9 +86,9 @@ if status == StatusCode.OK:
     print('Finished asynchronous infer!')
     for key in executable_network.output_info:
         print(request.get_blob(key).buffer)
-        print(ref_result[key].buffer)
+        print(ref_result[key])
         assert np.allclose(request.get_blob(key).buffer,
-                           ref_result[key].buffer)
+                           ref_result[key])
 else:
     raise RuntimeError('Infer Request failed to finish!')
 
