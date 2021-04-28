@@ -55,7 +55,9 @@ void regclass_InferRequest(py::module m)
             Common::set_request_blobs(self, inputs);
         }
         // Call Infer function
+        self._startTime = Time::now();
         self.Infer();
+        self._endTime = Time::now();
         // Get output Blobs and return
         Containers::PyResults results;
         for (auto& out : self._outputsInfo)
@@ -91,6 +93,7 @@ void regclass_InferRequest(py::module m)
             //         py::print("There is no callback function!");
             //     }
             // }
+            self._startTime = Time::now();
             self.StartAsync();
         },
         py::arg("inputs"),
@@ -109,6 +112,7 @@ void regclass_InferRequest(py::module m)
                 // self.user_callback_defined = true;
                 // self.user_callback = callback;
                 self.SetCompletionCallback([self, f_callback, userdata]() {
+                    self._endTime = Time::now();
                     py::gil_scoped_acquire acquire;
                     f_callback(self, userdata);
                 });
@@ -171,5 +175,8 @@ void regclass_InferRequest(py::module m)
         return output_blobs;
     });
 
-    //    latency
+    cls.def_property_readonly("latency", [](InferRequestWrapper& self) {
+        auto execTime = std::chrono::duration_cast<ns>(self._endTime - self._startTime);
+        return static_cast<double>(execTime.count()) * 0.000001;
+    });
 }
