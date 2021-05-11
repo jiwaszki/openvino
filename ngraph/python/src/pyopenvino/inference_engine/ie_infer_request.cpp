@@ -111,7 +111,7 @@ void regclass_InferRequest(py::module m)
             [](InferRequestWrapper& self, py::function f_callback, py::object userdata) {
                 // self.user_callback_defined = true;
                 // self.user_callback = callback;
-                self.SetCompletionCallback([self, f_callback, userdata]() {
+                self.SetCompletionCallback([&self, f_callback, userdata]() {
                     self._endTime = Time::now();
                     py::gil_scoped_acquire acquire;
                     f_callback(self, userdata);
@@ -176,7 +176,6 @@ void regclass_InferRequest(py::module m)
     });
 
     cls.def_property_readonly("latency", [](InferRequestWrapper& self) {
-        auto execTime = std::chrono::duration_cast<ns>(self._endTime - self._startTime);
-        return static_cast<double>(execTime.count()) * 0.000001;
+        return self.getLatency();
     });
 }

@@ -25,6 +25,12 @@ public:
 
     // bool user_callback_defined;
     // py::function user_callback;
+
+    double getLatency() {
+        auto execTime = std::chrono::duration_cast<ns>(_endTime - _startTime);
+        return static_cast<double>(execTime.count()) * 0.000001;
+    }
+
     InferenceEngine::ConstInputsDataMap _inputsInfo;
     InferenceEngine::ConstOutputsDataMap _outputsInfo;
     Time::time_point _startTime;
