@@ -20,6 +20,8 @@
 #include "pyopenvino/inference_engine/ie_infer_request.hpp"
 #include "pyopenvino/inference_engine/ie_infer_queue.hpp"
 
+#define INVALID_ID -1
+
 namespace py = pybind11;
 
 class InferQueue
@@ -33,9 +35,27 @@ public:
         , _user_ids(user_ids)
     {
         this->setDefaultCallbacks();
+        _last_id = -1;
     }
 
     ~InferQueue() { _requests.clear(); }
+
+    InferenceEngine::StatusCode _getIdleRequestStatus()
+    {
+        py::gil_scoped_release release;
+        std::unique_lock<std::mutex> lock(_mutex);
+        _cv.wait(lock, [this] { return !(_idle_handles.empty()); });
+
+        InferenceEngine::StatusCode status = _requests[_idle_handles.front()].Wait(
+            InferenceEngine::IInferRequest::WaitMode::STATUS_ONLY);
+
+        // if (status == InferenceEngine::StatusCode::INFER_NOT_STARTED)
+        // {
+        //     status = InferenceEngine::StatusCode::OK;
+        // }
+
+        return status;
+    }
 
     size_t getIdleRequestId()
     {
@@ -74,6 +94,8 @@ public:
         for (size_t handle = 0; handle < _requests.size(); handle++)
         {
             _requests[handle].SetCompletionCallback([this, handle /* ... */]() {
+                _requests[handle]._endTime = Time::now();
+                _latencies.push_back(_requests[handle].getLatency());
                 py::gil_scoped_acquire acquire;
                 _idle_handles.push(handle);
                 _cv.notify_one();
@@ -87,6 +109,8 @@ public:
         {
             _requests[handle].SetCompletionCallback([this, f_callback, handle /* ... */]() {
                 // Acquire GIL, execute Python function
+                _requests[handle]._endTime = Time::now();
+                _latencies.push_back(_requests[handle].getLatency());
                 py::gil_scoped_acquire acquire;
                 f_callback(_requests[handle], _user_ids[handle]);
                 // Add idle handle to queue
@@ -98,8 +122,10 @@ public:
     }
 
     std::vector<InferRequestWrapper> _requests;
+    std::vector<double> _latencies;
     std::vector<py::object> _user_ids; // user ID can be any Python object
     std::queue<size_t> _idle_handles;
+    size_t _last_id;
     std::mutex _mutex;
     std::condition_variable _cv;
 };
@@ -140,12 +166,16 @@ void regclass_InferQueue(py::module m)
         // Now GIL can be released
         {
             py::gil_scoped_release release;
+            self._requests[handle]._startTime = Time::now();
             // Start InferRequest in asynchronus mode
             self._requests[handle].StartAsync();
         }
     }, py::arg("inputs"), py::arg("userdata"));
 
     cls.def("wait_all", [](InferQueue& self) { return self.waitAll(); });
+
+    cls.def("get_idle_request_status",
+            [](InferQueue& self) { return self._getIdleRequestStatus(); });
 
     cls.def("set_infer_callback",
             [](InferQueue& self, py::function f_callback) { self.setCustomCallbacks(f_callback); });
@@ -160,4 +190,6 @@ void regclass_InferQueue(py::module m)
         py::keep_alive<0, 1>()); /* Keep set alive while iterator is used */
 
     cls.def("__getitem__", [](InferQueue& self, size_t i) { return self._requests[i]; });
+
+    cls.def_property_readonly("latencies", [](InferQueue& self) { return self._latencies; });
 }
