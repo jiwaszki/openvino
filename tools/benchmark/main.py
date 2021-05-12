@@ -5,18 +5,18 @@ import os
 import sys
 from datetime import datetime
 
-from openvino.tools.benchmark.benchmark import Benchmark
-from openvino.tools.benchmark.parameters import parse_args
-from openvino.tools.benchmark.utils.constants import MULTI_DEVICE_NAME, HETERO_DEVICE_NAME, CPU_DEVICE_NAME, \
+from tools.benchmark.benchmark import Benchmark
+from tools.benchmark.parameters import parse_args
+from tools.benchmark.utils.constants import MULTI_DEVICE_NAME, HETERO_DEVICE_NAME, CPU_DEVICE_NAME, \
     GPU_DEVICE_NAME, MYRIAD_DEVICE_NAME, GNA_DEVICE_NAME, BLOB_EXTENSION
-from openvino.tools.benchmark.utils.inputs_filling import set_inputs
-from openvino.tools.benchmark.utils.logging import logger
-from openvino.tools.benchmark.utils.progress_bar import ProgressBar
-from openvino.tools.benchmark.utils.utils import next_step, get_number_iterations, process_precision, \
+from tools.benchmark.utils.inputs_filling import set_inputs
+from tools.benchmark.utils.logging import logger
+from tools.benchmark.utils.progress_bar import ProgressBar
+from tools.benchmark.utils.utils import next_step, get_number_iterations, process_precision, \
     process_help_inference_string, print_perf_counters, dump_exec_graph, get_duration_in_milliseconds, \
     get_command_line_arguments, parse_nstreams_value_per_device, parse_devices, get_inputs_info, \
     print_inputs_and_outputs_info, get_batch_size, load_config, dump_config
-from openvino.tools.benchmark.utils.statistics_report import StatisticsReport, averageCntReport, detailedCntReport
+from tools.benchmark.utils.statistics_report import StatisticsReport, averageCntReport, detailedCntReport
 
 
 def main():
@@ -264,10 +264,14 @@ def run(args):
             device_number_streams[device] = benchmark.ie.get_config(device, key)
 
         # Number of requests
-        if args.mode == "poc":
-            infer_requests = []
-            for i in range(benchmark.nireq):
-                infer_requests.append(exe_network.create_infer_request())
+        if args.mode == 'pybind':
+            if self.api_type == 'sync':
+                infer_requests = []
+                for i in range(benchmark.nireq):
+                    infer_requests.append(exe_network.create_infer_request())
+            else:
+                from openvino.inference_engine import InferQueue
+                infer_requests = InferQueue(network=exe_network, jobs=benchmark.nireq)
         else:
             infer_requests = exe_network.requests
 
@@ -313,7 +317,7 @@ def run(args):
 
         progress_bar = ProgressBar(progress_bar_total_count, args.stream_output, args.progress) if args.progress else None
 
-        if args.mode == "poc":
+        if args.mode == 'pybind':
             duration_ms =  "{:.2f}".format(benchmark.first_infer(infer_requests=infer_requests))
         else:
             duration_ms =  "{:.2f}".format(benchmark.first_infer(exe_network))
@@ -323,7 +327,7 @@ def run(args):
                                     [
                                         ('first inference time (ms)', duration_ms)
                                     ])
-        if args.mode == "poc":
+        if args.mode == 'pybind':
             fps, latency_ms, total_duration_sec, iteration = benchmark.infer(infer_requests=infer_requests,
                                                                              batch_size=batch_size,
                                                                              progress_bar=progress_bar)
