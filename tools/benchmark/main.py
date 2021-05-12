@@ -265,7 +265,7 @@ def run(args):
 
         # Number of requests
         if args.mode == 'pybind':
-            if self.api_type == 'sync':
+            if args.api_type == 'sync':
                 infer_requests = []
                 for i in range(benchmark.nireq):
                     infer_requests.append(exe_network.create_infer_request())

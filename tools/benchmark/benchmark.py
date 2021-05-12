@@ -5,6 +5,8 @@ import os
 from datetime import datetime
 import time
 from statistics import median
+import numpy as np
+
 from openvino.inference_engine import IENetwork, IECore, get_version, StatusCode
 
 from .utils.constants import MULTI_DEVICE_NAME, HETERO_DEVICE_NAME, CPU_DEVICE_NAME, GPU_DEVICE_NAME, XML_EXTENSION, BIN_EXTENSION
@@ -98,14 +100,17 @@ class Benchmark:
                 latency = infer_request.latency
         else:
             if self.mode == 'pybind':
-                infer_request.async_infer()
-                status = infer_request.wait()
+                infer_requests.async_infer()
+                statuses = infer_requests.wait_all()
+                if statuses[0] != StatusCode.OK:
+                    raise Exception(f"Wait for all requests is failed with status code {status}!")
+                latency = infer_requests[0].latency
             else:
                 infer_request.async_infer()
                 status = exe_network.wait()
-            if status != StatusCode.OK:
-                raise Exception(f"Wait for all requests is failed with status code {status}!")
-            latency = infer_request.latency
+                if status != StatusCode.OK:
+                    raise Exception(f"Wait for all requests is failed with status code {status}!")
+                latency = infer_request.latency
         return latency
 
     def infer(self, exe_network=None, batch_size=1, infer_requests=None, progress_bar=None):
@@ -171,14 +176,15 @@ class Benchmark:
                   progress_bar.add_progress(1)
 
         # wait the latest inference executions
-        if self.mode == 'pybind':
-            statuses = infer_requests.wait_all()
-            if not(np.all(np.array(statuses) == StatusCode.OK)):
-                raise Exception(f"Wait for all requests failed!")
-        else:
-            status = exe_network.wait()
-            if status != StatusCode.OK:
-                raise Exception(f"Wait for all requests is failed with status code {status}!")
+        if self.api_type == 'async':
+            if self.mode == 'pybind':
+                statuses = infer_requests.wait_all()
+                if not(np.all(np.array(statuses) == StatusCode.OK)):
+                    raise Exception(f"Wait for all requests failed!")
+            else:
+                status = exe_network.wait()
+                if status != StatusCode.OK:
+                    raise Exception(f"Wait for all requests is failed with status code {status}!")
 
         total_duration_sec = (datetime.utcnow() - start_time).total_seconds()
         if self.mode == 'pybind' and self.api_type == "async":

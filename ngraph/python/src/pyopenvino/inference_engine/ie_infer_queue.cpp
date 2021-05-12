@@ -46,13 +46,16 @@ public:
         std::unique_lock<std::mutex> lock(_mutex);
         _cv.wait(lock, [this] { return !(_idle_handles.empty()); });
 
-        InferenceEngine::StatusCode status = _requests[_idle_handles.front()].Wait(
-            InferenceEngine::IInferRequest::WaitMode::STATUS_ONLY);
+        size_t request_id = _idle_handles.front();
 
-        // if (status == InferenceEngine::StatusCode::INFER_NOT_STARTED)
-        // {
-        //     status = InferenceEngine::StatusCode::OK;
-        // }
+        InferenceEngine::StatusCode status =
+            _requests[request_id].Wait(InferenceEngine::IInferRequest::WaitMode::STATUS_ONLY);
+
+        if (status == InferenceEngine::StatusCode::RESULT_NOT_READY)
+        {
+            status =
+                _requests[request_id].Wait(InferenceEngine::IInferRequest::WaitMode::RESULT_READY);
+        }
 
         return status;
     }
