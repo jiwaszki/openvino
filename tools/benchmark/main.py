@@ -272,6 +272,7 @@ def run(args):
             else:
                 from openvino.inference_engine import InferQueue
                 infer_requests = InferQueue(network=exe_network, jobs=benchmark.nireq)
+                benchmark.nireq = len(infer_requests)
         else:
             infer_requests = exe_network.requests
 
