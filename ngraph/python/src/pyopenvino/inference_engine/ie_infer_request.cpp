@@ -21,48 +21,48 @@ void regclass_InferRequest(py::module m)
         m, "InferRequest");
 
     cls.def("set_batch", [](InferRequestWrapper& self, const int size) {
-        self.SetBatch(size);
+        self._request.SetBatch(size);
     }, py::arg("size"));
 
     cls.def("get_blob", [](InferRequestWrapper& self, const std::string& name) {
-        return self.GetBlob(name);
+        return self._request.GetBlob(name);
     }, py::arg("name"));
 
     cls.def("set_blob", [](InferRequestWrapper& self,
                            const std::string& name,
                            py::handle& blob) {
-        self.SetBlob(name, Common::cast_to_blob(blob));
+        self._request.SetBlob(name, Common::cast_to_blob(blob));
     }, py::arg("name"), py::arg("blob"));
 
     cls.def("set_blob", [](InferRequestWrapper& self,
                            const std::string& name,
                            py::handle& blob,
                            const InferenceEngine::PreProcessInfo& info) {
-        self.SetBlob(name, Common::cast_to_blob(blob));
+        self._request.SetBlob(name, Common::cast_to_blob(blob));
     }, py::arg("name"), py::arg("blob"), py::arg("info"));
 
     cls.def("set_input", [](InferRequestWrapper& self, const py::dict& inputs) {
-        Common::set_request_blobs(self, inputs);
+        Common::set_request_blobs(self._request, inputs);
     }, py::arg("inputs"));
 
     cls.def("set_output", [](InferRequestWrapper& self, const py::dict& results) {
-        Common::set_request_blobs(self, results);
+        Common::set_request_blobs(self._request, results);
     }, py::arg("results"));
 
     cls.def("_infer", [](InferRequestWrapper& self, const py::dict& inputs) {
         // Update inputs if there are any
         if (!inputs.empty()) {
-            Common::set_request_blobs(self, inputs);
+            Common::set_request_blobs(self._request, inputs);
         }
         // Call Infer function
         self._startTime = Time::now();
-        self.Infer();
+        self._request.Infer();
         self._endTime = Time::now();
         // Get output Blobs and return
         Containers::PyResults results;
         for (auto& out : self._outputsInfo)
         {
-            results[out.first] = self.GetBlob(out.first);
+            results[out.first] = self._request.GetBlob(out.first);
         }
         return results;
     }, py::arg("inputs"));
@@ -73,18 +73,18 @@ void regclass_InferRequest(py::module m)
             py::gil_scoped_release release;
             if (!inputs.empty())
             {
-                Common::set_request_blobs(self, inputs);
+                Common::set_request_blobs(self._request, inputs);
             }
             // TODO: check for None so next async infer userdata can be updated
             // if (!userdata.empty())
             // {
             //     if (user_callback_defined)
             //     {
-            //         self.SetCompletionCallback([self, userdata]() {
+            //         self._request.SetCompletionCallback([self, userdata]() {
             //             // py::gil_scoped_acquire acquire;
             //             auto statusCode = const_cast<InferRequestWrapper&>(self).Wait(
             //                 InferenceEngine::IInferRequest::WaitMode::STATUS_ONLY);
-            //             self.user_callback(self, statusCode, userdata);
+            //             self._request.user_callback(self, statusCode, userdata);
             //             // py::gil_scoped_release release;
             //         });
             //     }
@@ -94,7 +94,7 @@ void regclass_InferRequest(py::module m)
             //     }
             // }
             self._startTime = Time::now();
-            self.StartAsync();
+            self._request.StartAsync();
         },
         py::arg("inputs"),
         py::arg("userdata"));
@@ -103,15 +103,15 @@ void regclass_InferRequest(py::module m)
         "wait",
         [](InferRequestWrapper& self, int64_t millis_timeout) {
             py::gil_scoped_release release;
-            return self.Wait(millis_timeout);
+            return self._request.Wait(millis_timeout);
         },
         py::arg("millis_timeout") = InferenceEngine::IInferRequest::WaitMode::RESULT_READY);
 
     cls.def("set_completion_callback",
             [](InferRequestWrapper& self, py::function f_callback, py::object userdata) {
-                // self.user_callback_defined = true;
-                // self.user_callback = callback;
-                self.SetCompletionCallback([&self, f_callback, userdata]() {
+                // self._request.user_callback_defined = true;
+                // self._request.user_callback = callback;
+                self._request.SetCompletionCallback([&self, f_callback, userdata]() {
                     self._endTime = Time::now();
                     py::gil_scoped_acquire acquire;
                     f_callback(self, userdata);
@@ -120,7 +120,7 @@ void regclass_InferRequest(py::module m)
 
     cls.def("get_perf_counts", [](InferRequestWrapper& self) {
         std::map<std::string, InferenceEngine::InferenceEngineProfileInfo> perfMap;
-        perfMap = self.GetPerformanceCounts();
+        perfMap = self._request.GetPerformanceCounts();
         py::dict perf_map;
 
         for (auto it : perfMap)
@@ -150,7 +150,7 @@ void regclass_InferRequest(py::module m)
     });
 
     cls.def("preprocess_info", [](InferRequestWrapper& self, const std::string& name) {
-        return self.GetPreProcess(name);
+        return self._request.GetPreProcess(name);
     }, py::arg("name"));
 
     //    cls.def_property_readonly("preprocess_info", [](InferRequestWrapper& self) {
@@ -161,7 +161,7 @@ void regclass_InferRequest(py::module m)
         Containers::PyResults input_blobs;
         for (auto& in : self._inputsInfo)
         {
-            input_blobs[in.first] = self.GetBlob(in.first);
+            input_blobs[in.first] = self._request.GetBlob(in.first);
         }
         return input_blobs;
     });
@@ -170,7 +170,7 @@ void regclass_InferRequest(py::module m)
         Containers::PyResults output_blobs;
         for (auto& out : self._outputsInfo)
         {
-            output_blobs[out.first] = self.GetBlob(out.first);
+            output_blobs[out.first] = self._request.GetBlob(out.first);
         }
         return output_blobs;
     });

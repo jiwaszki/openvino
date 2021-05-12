@@ -49,12 +49,12 @@ public:
         size_t request_id = _idle_handles.front();
 
         InferenceEngine::StatusCode status =
-            _requests[request_id].Wait(InferenceEngine::IInferRequest::WaitMode::STATUS_ONLY);
+            _requests[request_id]._request.Wait(InferenceEngine::IInferRequest::WaitMode::STATUS_ONLY);
 
         if (status == InferenceEngine::StatusCode::RESULT_NOT_READY)
         {
             status =
-                _requests[request_id].Wait(InferenceEngine::IInferRequest::WaitMode::RESULT_READY);
+                _requests[request_id]._request.Wait(InferenceEngine::IInferRequest::WaitMode::RESULT_READY);
         }
 
         return status;
@@ -86,7 +86,7 @@ public:
         for (size_t handle = 0; handle < _requests.size(); handle++)
         {
             statuses.push_back(
-                _requests[handle].Wait(InferenceEngine::IInferRequest::WaitMode::RESULT_READY));
+                _requests[handle]._request.Wait(InferenceEngine::IInferRequest::WaitMode::RESULT_READY));
         }
 
         return statuses;
@@ -96,7 +96,7 @@ public:
     {
         for (size_t handle = 0; handle < _requests.size(); handle++)
         {
-            _requests[handle].SetCompletionCallback([this, handle /* ... */]() {
+            _requests[handle]._request.SetCompletionCallback([this, handle /* ... */]() {
                 _requests[handle]._endTime = Time::now();
                 _latencies.push_back(_requests[handle].getLatency());
                 py::gil_scoped_acquire acquire;
@@ -110,7 +110,7 @@ public:
     {
         for (size_t handle = 0; handle < _requests.size(); handle++)
         {
-            _requests[handle].SetCompletionCallback([this, f_callback, handle /* ... */]() {
+            _requests[handle]._request.SetCompletionCallback([this, f_callback, handle /* ... */]() {
                 // Acquire GIL, execute Python function
                 _requests[handle]._endTime = Time::now();
                 _latencies.push_back(_requests[handle].getLatency());
@@ -126,8 +126,8 @@ public:
 
     std::vector<InferRequestWrapper> _requests;
     std::vector<double> _latencies;
-    std::vector<py::object> _user_ids; // user ID can be any Python object
     std::queue<size_t> _idle_handles;
+    std::vector<py::object> _user_ids; // user ID can be any Python object
     size_t _last_id;
     std::mutex _mutex;
     std::condition_variable _cv;
@@ -148,7 +148,7 @@ void regclass_InferQueue(py::module m)
 
         for (size_t handle = 0; handle < jobs; handle++)
         {
-            auto request = static_cast<InferRequestWrapper>(net.CreateInferRequest());
+            auto request = InferRequestWrapper(net.CreateInferRequest());
             // Get Inputs and Outputs info from executable network
             request._inputsInfo = net.GetInputsInfo();
             request._outputsInfo = net.GetOutputsInfo();
@@ -168,14 +168,14 @@ void regclass_InferQueue(py::module m)
         self._user_ids[handle] = userdata;
         // Update inputs of picked InferRequest
         if (!inputs.empty()) {
-            Common::set_request_blobs(self._requests[handle], inputs);
+            Common::set_request_blobs(self._requests[handle]._request, inputs);
         }
         // Now GIL can be released
         {
             py::gil_scoped_release release;
             self._requests[handle]._startTime = Time::now();
             // Start InferRequest in asynchronus mode
-            self._requests[handle].StartAsync();
+            self._requests[handle]._request.StartAsync();
         }
     }, py::arg("inputs"), py::arg("userdata"));
 

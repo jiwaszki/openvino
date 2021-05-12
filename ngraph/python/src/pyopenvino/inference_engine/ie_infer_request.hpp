@@ -17,10 +17,12 @@ namespace py = pybind11;
 typedef std::chrono::high_resolution_clock Time;
 typedef std::chrono::nanoseconds ns;
 
-class InferRequestWrapper : public InferenceEngine::InferRequest {
+class InferRequestWrapper {
 public:
-    using InferenceEngine::InferRequest::InferRequest;
-
+    InferRequestWrapper(InferenceEngine::InferRequest request)
+        : _request(request)
+    {
+    }
     // ~InferRequestWrapper() = default;
 
     // bool user_callback_defined;
@@ -31,6 +33,7 @@ public:
         return static_cast<double>(execTime.count()) * 0.000001;
     }
 
+    InferenceEngine::InferRequest _request;
     InferenceEngine::ConstInputsDataMap _inputsInfo;
     InferenceEngine::ConstOutputsDataMap _outputsInfo;
     Time::time_point _startTime;

@@ -263,27 +263,22 @@ namespace Common
 
     size_t get_optimal_number_of_requests(const InferenceEngine::ExecutableNetwork& actual) {
         try {
-            InferenceEngine::ResponseDesc response;
-            InferenceEngine::Parameter parameter_value;
-            actual.GetMetric(METRIC_KEY(SUPPORTED_METRICS), parameter_value, &response));
-            auto supported_metrics = parameter_value.as < std::vector < std::string >> ();
-            std::string key = METRIC_KEY(OPTIMAL_NUMBER_OF_INFER_REQUESTS);
+            auto parameter_value = actual.GetMetric(METRIC_KEY(SUPPORTED_METRICS));
+            auto supported_metrics = parameter_value.as<std::vector<std::string>>();
+            const std::string key = METRIC_KEY(OPTIMAL_NUMBER_OF_INFER_REQUESTS);
             if (std::find(supported_metrics.begin(), supported_metrics.end(), key) != supported_metrics.end()) {
-                actual.GetMetric(key, parameter_value, &response));
+                parameter_value = actual.GetMetric(key);
                 if (parameter_value.is<unsigned int>())
                     return parameter_value.as<size_t>();
                 else
                     IE_THROW() << "Unsupported format for " << key << "!"
-                               << " Please specify number of infer requests directly!";
-            }
-            else
-            {
+                            << " Please specify number of infer requests directly!";
+            } else {
                 IE_THROW() << "Can't load network: " << key << " is not supported!"
-                           << " Please specify number of infer requests directly!";
+                        << " Please specify number of infer requests directly!";
             }
-        } catch (const std::exception &ex) {
-            IE_THROW() << "Can't load network: " << ex.what()
-                       << " Please specify number of infer requests directly!";
+        } catch (const std::exception& ex) {
+            IE_THROW() << "Can't load network: " << ex.what() << " Please specify number of infer requests directly!";
         }
     }
 
