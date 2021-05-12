@@ -138,6 +138,10 @@ void regclass_InferQueue(py::module m)
     py::class_<InferQueue, std::shared_ptr<InferQueue>> cls(m, "InferQueue");
 
     cls.def(py::init([](InferenceEngine::ExecutableNetwork& net, size_t jobs) {
+        if (jobs == 0) {
+            jobs = Common::get_optimal_number_of_requests(net);
+        }
+
         std::vector<InferRequestWrapper> requests;
         std::queue<size_t> idle_handles;
         std::vector<py::object> user_ids(jobs);

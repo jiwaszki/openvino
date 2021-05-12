@@ -4,7 +4,9 @@
 
 #pragma once
 
+#include <cpp/ie_executable_network.hpp>
 #include <cpp/ie_infer_request.hpp>
+#include <ie_plugin_config.hpp>
 #include <ie_blob.h>
 #include <ie_parameter.hpp>
 #include <pybind11/numpy.h>
@@ -46,4 +48,6 @@ namespace Common
     void blob_from_numpy(const py::handle& _arr, InferenceEngine::Blob::Ptr &blob);
 
     void set_request_blobs(InferenceEngine::InferRequest& request, const py::dict& dictonary);
+
+    size_t get_optimal_number_of_requests(const InferenceEngine::ExecutableNetwork& actual);
 }; // namespace Common
