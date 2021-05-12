@@ -49,5 +49,5 @@ namespace Common
 
     void set_request_blobs(InferenceEngine::InferRequest& request, const py::dict& dictonary);
 
-    size_t get_optimal_number_of_requests(const InferenceEngine::ExecutableNetwork& actual);
+    uint32_t get_optimal_number_of_requests(const InferenceEngine::ExecutableNetwork& actual);
 }; // namespace Common

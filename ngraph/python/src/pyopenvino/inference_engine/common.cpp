@@ -261,7 +261,7 @@ namespace Common
         }
     }
 
-    size_t get_optimal_number_of_requests(const InferenceEngine::ExecutableNetwork& actual) {
+    uint32_t get_optimal_number_of_requests(const InferenceEngine::ExecutableNetwork& actual) {
         try {
             auto parameter_value = actual.GetMetric(METRIC_KEY(SUPPORTED_METRICS));
             auto supported_metrics = parameter_value.as<std::vector<std::string>>();
@@ -269,7 +269,7 @@ namespace Common
             if (std::find(supported_metrics.begin(), supported_metrics.end(), key) != supported_metrics.end()) {
                 parameter_value = actual.GetMetric(key);
                 if (parameter_value.is<unsigned int>())
-                    return parameter_value.as<size_t>();
+                    return parameter_value.as<unsigned int>();
                 else
                     IE_THROW() << "Unsupported format for " << key << "!"
                             << " Please specify number of infer requests directly!";

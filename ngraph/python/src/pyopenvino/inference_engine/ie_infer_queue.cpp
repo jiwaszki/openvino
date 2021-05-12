@@ -139,7 +139,8 @@ void regclass_InferQueue(py::module m)
 
     cls.def(py::init([](InferenceEngine::ExecutableNetwork& net, size_t jobs) {
         if (jobs == 0) {
-            jobs = Common::get_optimal_number_of_requests(net);
+            const InferenceEngine::ExecutableNetwork& _net = net;
+            jobs = (size_t)Common::get_optimal_number_of_requests(_net);
         }
 
         std::vector<InferRequestWrapper> requests;
