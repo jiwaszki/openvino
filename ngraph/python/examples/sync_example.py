@@ -29,7 +29,7 @@ executable_network = ie.load_network(network=ie_network,
                                      config={})
 
 # Infer directly
-result_executable_network = executable_network.infer({'data': img})
+result_executable_network = executable_network.infer_new_request({'data': img})
 
 # Prepare request
 request = executable_network.create_infer_request()

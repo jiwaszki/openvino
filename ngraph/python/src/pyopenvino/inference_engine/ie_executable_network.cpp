@@ -27,7 +27,7 @@ void regclass_ExecutableNetwork(py::module m)
         return request;
     });
 
-    cls.def("_infer", [](InferenceEngine::ExecutableNetwork& self, const py::dict& inputs) {
+    cls.def("_infer_new_request", [](InferenceEngine::ExecutableNetwork& self, const py::dict& inputs) {
         // Create temporary InferRequest
         auto request = self.CreateInferRequest();
         // Update inputs if there are any

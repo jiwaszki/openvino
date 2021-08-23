@@ -38,18 +38,23 @@ def normalize_inputs(py_dict: dict):
             for k, v in py_dict.items()}
 
 
+def infer_new_request(request, inputs: dict = {}):
+    results = request._infer_new_request(inputs=normalize_inputs(inputs))
+    return {name: (blob.buffer.copy()) for name, blob in results.items()}
+
+
 def infer(request, inputs: dict = {}):
     results = request._infer(inputs=normalize_inputs(inputs))
     return {name: (blob.buffer.copy()) for name, blob in results.items()}
 
 
-def get_result(request, name: str):
-    return request.get_blob(name).buffer.copy()
-
-
 def async_infer(request, inputs: dict = {}, userdata=None):
     request._async_infer(inputs=normalize_inputs(inputs),
                          userdata=userdata)
+
+
+def get_result(request, name: str):
+    return request.get_blob(name).buffer.copy()
 
 
 # Dispatch Blob types on Python side.
