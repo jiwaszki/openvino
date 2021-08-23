@@ -299,8 +299,8 @@ def run(args):
                 for i in range(benchmark.nireq):
                     infer_requests.append(exe_network.create_infer_request())
             else:
-                from openvino.inference_engine import InferQueue
-                infer_requests = InferQueue(network=exe_network, jobs=benchmark.nireq)
+                from openvino.inference_engine import AsyncInferQueue
+                infer_requests = AsyncInferQueue(network=exe_network, jobs=benchmark.nireq)
                 benchmark.nireq = len(infer_requests)
         else:
             infer_requests = exe_network.requests

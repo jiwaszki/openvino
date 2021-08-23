@@ -15,14 +15,14 @@ import time
 
 from openvino.inference_engine import Core
 from openvino.inference_engine import StatusCode
-from openvino.inference_engine import InferQueue
+from openvino.inference_engine import AsyncInferQueue
 
 import helpers
 
 # Generate random number of images
 images = helpers.generate_random_images(num=20)
 
-# Create database for InferQueue
+# Create database for AsyncInferQueue
 engine, connection, metadata, tab = helpers.create_sqlalchemy_database('queue')
 metadata.create_all(engine)
 
@@ -52,10 +52,10 @@ ref_end_time = time.time()
 ref_time = (ref_end_time - ref_start_time) * 1000
 
 
-# Create InferQueue with specific number of jobs/InferRequests
-infer_queue = InferQueue(network=executable_network, jobs=8)
+# Create AsyncInferQueue with specific number of jobs/InferRequests
+infer_queue = AsyncInferQueue(network=executable_network, jobs=8)
 
-print('Starting InferQueue...')
+print('Starting AsyncInferQueue...')
 gathered_images = 0
 start_queue_time = time.time()
 
@@ -81,8 +81,8 @@ statuses = infer_queue.wait_all()
 
 end_queue_time = time.time()
 queue_time = (end_queue_time - start_queue_time) * 1000
-print('Finished InferQueue!')
-print('InferQueue was able to gather',
+print('Finished AsyncInferQueue!')
+print('AsyncInferQueue was able to gather',
       gathered_images,
       'results between infer calls.')
 
@@ -99,7 +99,7 @@ for i in range(len(infer_queue)):
 
 if np.all(np.array(statuses) == StatusCode.OK):
     print('Reference execution time:', ref_time)
-    print('Finished InferQueue! Execution time:', queue_time)
+    print('Finished AsyncInferQueue! Execution time:', queue_time)
     results = helpers.sort_queue_results(
         connection.execute(helpers.db.select([tab])).fetchall())
     ref_results = helpers.sort_queue_results(
@@ -111,4 +111,4 @@ if np.all(np.array(statuses) == StatusCode.OK):
         assert ref_results[i] == results[i]
 else:
     metadata.drop_all(engine)  # drops all the tables in the database
-    raise RuntimeError('InferQueue failed to finish!')
+    raise RuntimeError('AsyncInferQueue failed to finish!')

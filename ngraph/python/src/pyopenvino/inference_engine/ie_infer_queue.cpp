@@ -24,11 +24,11 @@
 
 namespace py = pybind11;
 
-class InferQueue {
+class AsyncInferQueue {
 public:
-    InferQueue(std::vector<InferRequestWrapper> requests,
-               std::queue<size_t> idle_handles,
-               std::vector<py::object> user_ids)
+    AsyncInferQueue(std::vector<InferRequestWrapper> requests,
+                    std::queue<size_t> idle_handles,
+                    std::vector<py::object> user_ids)
         : _requests(requests),
           _idle_handles(idle_handles),
           _user_ids(user_ids) {
@@ -36,7 +36,7 @@ public:
         _last_id = -1;
     }
 
-    ~InferQueue() {
+    ~AsyncInferQueue() {
         _requests.clear();
     }
 
@@ -145,8 +145,8 @@ public:
     std::condition_variable _cv;
 };
 
-void regclass_InferQueue(py::module m) {
-    py::class_<InferQueue, std::shared_ptr<InferQueue>> cls(m, "InferQueue");
+void regclass_AsyncInferQueue(py::module m) {
+    py::class_<AsyncInferQueue, std::shared_ptr<AsyncInferQueue>> cls(m, "AsyncInferQueue");
 
     cls.def(py::init([](InferenceEngine::ExecutableNetwork& net, size_t jobs) {
                 if (jobs == 0) {
@@ -168,15 +168,15 @@ void regclass_InferQueue(py::module m) {
                     idle_handles.push(handle);
                 }
 
-                return new InferQueue(requests, idle_handles, user_ids);
+                return new AsyncInferQueue(requests, idle_handles, user_ids);
             }),
             py::arg("network"),
             py::arg("jobs") = 0);
 
     cls.def(
         "_async_infer",
-        [](InferQueue& self, const py::dict inputs, py::object userdata) {
-            // getIdleRequestId function has an intention to block InferQueue
+        [](AsyncInferQueue& self, const py::dict inputs, py::object userdata) {
+            // getIdleRequestId function has an intention to block AsyncInferQueue
             // until there is at least one idle (free to use) InferRequest
             auto handle = self.getIdleRequestId();
             // Set new inputs label/id from user
@@ -196,38 +196,38 @@ void regclass_InferQueue(py::module m) {
         py::arg("inputs"),
         py::arg("userdata"));
 
-    cls.def("is_ready", [](InferQueue& self) {
+    cls.def("is_ready", [](AsyncInferQueue& self) {
         return self._is_ready();
     });
 
-    cls.def("wait_all", [](InferQueue& self) {
+    cls.def("wait_all", [](AsyncInferQueue& self) {
         return self.waitAll();
     });
 
-    cls.def("get_idle_request_info", [](InferQueue& self) {
+    cls.def("get_idle_request_info", [](AsyncInferQueue& self) {
         return self._getIdleRequestInfo();
     });
 
-    cls.def("set_infer_callback", [](InferQueue& self, py::function f_callback) {
+    cls.def("set_infer_callback", [](AsyncInferQueue& self, py::function f_callback) {
         self.setCustomCallbacks(f_callback);
     });
 
-    cls.def("__len__", [](InferQueue& self) {
+    cls.def("__len__", [](AsyncInferQueue& self) {
         return self._requests.size();
     });
 
     cls.def(
         "__iter__",
-        [](InferQueue& self) {
+        [](AsyncInferQueue& self) {
             return py::make_iterator(self._requests.begin(), self._requests.end());
         },
         py::keep_alive<0, 1>()); /* Keep set alive while iterator is used */
 
-    cls.def("__getitem__", [](InferQueue& self, size_t i) {
+    cls.def("__getitem__", [](AsyncInferQueue& self, size_t i) {
         return self._requests[i];
     });
 
-    cls.def_property_readonly("userdata", [](InferQueue& self) {
+    cls.def_property_readonly("userdata", [](AsyncInferQueue& self) {
         return self._user_ids;
     });
 }

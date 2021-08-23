@@ -87,6 +87,6 @@ PYBIND11_MODULE(pyopenvino, m)
     regclass_Version(m);
     regclass_Parameter(m);
     regclass_InputInfo(m);
-    regclass_InferQueue(m);
+    regclass_AsyncInferQueue(m);
     regclass_PreProcessInfo(m);
 }
