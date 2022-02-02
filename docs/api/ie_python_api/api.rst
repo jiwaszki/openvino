@@ -5,4 +5,4 @@ Inference Engine Python API
    :toctree: _autosummary
    :template: custom-module-template.rst
 
-   openvino.inference_engine
+   openvino
