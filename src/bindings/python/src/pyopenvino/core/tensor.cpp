@@ -29,12 +29,47 @@ void regclass_Tensor(py::module m) {
                 array : numpy.array
 
                 shared_memory : bool
-                    If true this Tensor memory is being shared with a host,
+                    If `True` this Tensor memory is being shared with a host,
                     that means the responsibility of keeping host memory is
                     on the side of a user. Any action performed on the host
                     memory will be reflected on this Tensor's memory!
-                    If false, data is being copied to this Tensor.
-                    Default: false
+                    If `False`, data is being copied to this Tensor.
+
+                    Requires data to be C_CONTIGUOUS if `True`.
+
+                    Default: `False`
+
+                Returns
+                ----------
+                __init__ : openvino.runtime.Tensor
+            )");
+
+    cls.def(py::init([](const ov::element::Type element_type, const ov::Shape& shape, py::array& array) {
+                return Common::tensor_from_pointer(element_type, shape, array);
+            }),
+            py::arg("element_type"),
+            py::arg("shape"),
+            py::arg("array"),
+            R"(
+                Another Tensor's special constructor.
+
+                Mainly to match with C++ API, please use it only in advanced cases if necessary!
+
+                Parameters
+                ----------
+                element_type : openvino.runtime.Type
+
+                shape : openvino.runtime.Shape
+
+                array : numpy.array
+                    Underlaying methods will retrieve pointer on first element
+                    from it, which is simulating `host_ptr` from C++ API.
+                    Tensor memory is being shared with a host,
+                    that means the responsibility of keeping host memory is
+                    on the side of a user. Any action performed on the host
+                    memory will be reflected on this Tensor's memory!
+
+                    Data is required to be C_CONTIGUOUS.
 
                 Returns
                 ----------
@@ -76,6 +111,16 @@ void regclass_Tensor(py::module m) {
             py::arg("begin"),
             py::arg("end"));
 
+    cls.def("get_element_type",
+            &ov::Tensor::get_element_type,
+            R"(
+            Gets Tensor's element type.
+
+            Returns
+            ----------
+            get_element_type : openvino.runtime.Type
+            )");
+
     cls.def_property_readonly("element_type",
                               &ov::Tensor::get_element_type,
                               R"(
@@ -85,6 +130,17 @@ void regclass_Tensor(py::module m) {
                                 ----------
                                 element_type : openvino.runtime.Type
                               )");
+
+    cls.def("get_size",
+            &ov::Tensor::get_size,
+            R"(
+            Gets Tensor's size as total number of elements.
+
+            Returns
+            ----------
+            get_size : int
+                Total number of elements in this Tensor.
+            )");
 
     cls.def_property_readonly("size",
                               &ov::Tensor::get_size,
@@ -97,6 +153,17 @@ void regclass_Tensor(py::module m) {
                                     Total number of elements in this Tensor.
                               )");
 
+    cls.def("get_byte_size",
+            &ov::Tensor::get_byte_size,
+            R"(
+            Gets Tensor's size in bytes.
+
+            Returns
+            ----------
+            get_byte_size : int
+                Size in bytes for this Tensor.
+            )");
+
     cls.def_property_readonly("byte_size",
                               &ov::Tensor::get_byte_size,
                               R"(
@@ -107,6 +174,17 @@ void regclass_Tensor(py::module m) {
                                 byte_size : int
                                     Size in bytes for this Tensor.
                               )");
+
+    cls.def("get_strides",
+            &ov::Tensor::get_strides,
+            R"(
+            Gets Tensor's strides in bytes.
+
+            Returns
+            ----------
+            get_strides : openvino.runtime.Strides
+                Sizes in bytes for this Tensor's strides.
+            )");
 
     cls.def_property_readonly("strides",
                               &ov::Tensor::get_strides,
@@ -135,6 +213,47 @@ void regclass_Tensor(py::module m) {
             ----------
             data : numpy.array
         )");
+
+    cls.def("get_shape",
+            &ov::Tensor::get_shape,
+            R"(
+            Gets Tensor's shape.
+
+            Returns
+            ----------
+            get_shape : openvino.runtime.Shape
+            )");
+
+    cls.def("set_shape",
+            &ov::Tensor::set_shape,
+            R"(
+            Sets Tensor's shape.
+
+            Parameters
+            ----------
+            shape : list[int]
+
+            Returns
+            ----------
+            set_shape : None
+            )");
+
+    cls.def(
+        "set_shape",
+        [](ov::Tensor& self, std::vector<size_t>& shape) {
+            self.set_shape(shape);
+        },
+        R"(
+            Sets Tensor's shape.
+
+            Parameters
+            ----------
+            shape : openvino.runtime.Shape
+
+            Returns
+            ----------
+            set_shape : None
+            )");
 
     cls.def_property("shape",
                      &ov::Tensor::get_shape,
