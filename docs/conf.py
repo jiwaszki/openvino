@@ -40,7 +40,6 @@ extensions = [
     'sphinx_panels',
     'doxyrest',
     'cpplexer',
-    'numpydoc',
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
     'sphinx_sitemap'
