@@ -29,6 +29,12 @@ Inference Engine Python API
    :toctree: _autosummary
    :template: custom-module-template.rst
 
+   openvino.offline_transformations
+
+.. autosummary::
+   :toctree: _autosummary
+   :template: custom-module-template.rst
+
    ngraph
 
 .. autosummary::
