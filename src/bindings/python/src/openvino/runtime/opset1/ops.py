@@ -2741,7 +2741,7 @@ def tanh(node: NodeInput, name: Optional[str] = None) -> Node:
 
     :param node: One of: input node, array or scalar.
     :param name: Optional new name for output node.
-    returns New node with tanh operation applied on it.
+    :return: New node with tanh operation applied on it.
     """
     return _get_node_factory_opset1().create("Tanh", [node])
 
@@ -2752,7 +2752,7 @@ def tile(data: NodeInput, repeats: NodeInput, name: Optional[str] = None) -> Nod
 
     :param data: The input tensor to be tiled
     :param repeats: Per-dimension replication factors
-    returns Tile node
+    :return: Tile node
     """
     return _get_node_factory_opset1().create("Tile", as_nodes(data, repeats))
 
@@ -2773,7 +2773,7 @@ def topk(
     :param axis: TopK Axis.
     :param mode: Compute TopK largest ('max') or smallest ('min')
     :param sort: Order of output elements (sort by: 'none', 'index' or 'value')
-    returns The new node which performs TopK (both indices and values)
+    :return: The new node which performs TopK (both indices and values)
     """
     return _get_node_factory_opset1().create(
         "TopK",
@@ -2788,7 +2788,7 @@ def transpose(data: NodeInput, input_order: NodeInput, name: Optional[str] = Non
 
     :param data: The input tensor to be transposed
     :param input_order: Permutation of axes to be applied to the input tensor
-    returns Transpose node
+    :return: Transpose node
     """
     return _get_node_factory_opset1().create("Transpose", as_nodes(data, input_order))
 
@@ -2806,7 +2806,7 @@ def unsqueeze(data: NodeInput, axes: NodeInput, name: Optional[str] = None) -> N
     :param data: The node with data tensor.
     :param axes: List of non-negative integers, indicate the dimensions to be inserted.
                   One of: input node or array.
-    returns The new node performing an unsqueeze operation on input tensor.
+    :return: The new node performing an unsqueeze operation on input tensor.
     """
     return _get_node_factory_opset1().create("Unsqueeze", as_nodes(data, axes))
 
@@ -2820,6 +2820,6 @@ def variadic_split(
     :param data: The input tensor to be split
     :param axis: Axis along which the input data will be split
     :param split_lengths: Sizes of the output tensors along the split axis
-    returns VariadicSplit node
+    :return: VariadicSplit node
     """
     return _get_node_factory_opset1().create("VariadicSplit", as_nodes(data, axis, split_lengths))
