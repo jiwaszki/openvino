@@ -648,6 +648,6 @@ void regclass_InferRequest(py::module m) {
             Gets all outputs tensors of this InferRequest.
 
             :return: Dictionary of results from output tensors with ports as keys.
-            :rtype: dict[openvino.runtime.ConstOutput : openvino.runtime.Tensor]
+            :rtype: dict[openvino.runtime.ConstOutput : numpy.array]
         )");
 }

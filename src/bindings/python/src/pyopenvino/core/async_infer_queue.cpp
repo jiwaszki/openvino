@@ -229,6 +229,7 @@ void regclass_AsyncInferQueue(py::module m) {
         },
         R"(
         Returns next free id of InferRequest from queue's pool.
+        Function waits for any request to complete and then returns this request's id.
         
         :rtype: int
     )");

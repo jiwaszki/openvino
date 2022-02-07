@@ -82,14 +82,11 @@ def get_input_types(obj: Union[InferRequestBase, CompiledModelBase]) -> dict:
 
 
 class InferRequest(InferRequestBase):
-    """
-    InferRequest class represents infer request which can be run in
-    asynchronous or synchronous manners.
-    """
+    """InferRequest class represents infer request which can be run in asynchronous or synchronous manners."""
 
     def infer(self, inputs: Union[dict, list] = None) -> dict:
-        """
-        Infers specified input(s) in synchronous mode.
+        """Infers specified input(s) in synchronous mode.
+
         Blocks all methods of InferRequest while request is running.
         Calling any method will lead to throwning exceptions.
 
@@ -107,8 +104,8 @@ class InferRequest(InferRequestBase):
     def start_async(
         self, inputs: Union[dict, list] = None, userdata: Any = None
     ) -> None:
-        """
-        Starts inference of specified input(s) in asynchronous mode.
+        """Starts inference of specified input(s) in asynchronous mode.
+
         Returns immediately. Inference starts also immediately.
         Calling any method while the request is running will lead to
         throwning exceptions.
@@ -127,14 +124,15 @@ class InferRequest(InferRequestBase):
 
 
 class CompiledModel(CompiledModelBase):
-    """
+    """CompiledModel class.
+
     CompiledModel represents Model that is compiled for a specific device by applying
     multiple optimization transformations, then mapping to compute kernels.
     """
 
     def create_infer_request(self) -> InferRequest:
-        """
-        Creates an inference request object used to infer the compiled model.
+        """Creates an inference request object used to infer the compiled model.
+
         The created request has allocated input and output tensors.
 
         :return: New InferRequest object.
@@ -143,8 +141,8 @@ class CompiledModel(CompiledModelBase):
         return InferRequest(super().create_infer_request())
 
     def infer_new_request(self, inputs: Union[dict, list] = None) -> dict:
-        """
-        Infers specified input(s) in synchronous mode.
+        """Infers specified input(s) in synchronous mode.
+
         Blocks all methods of CompiledModel while request is running.
 
         Method creates new temporary InferRequest and run inference on it.
@@ -162,14 +160,13 @@ class CompiledModel(CompiledModelBase):
         )
 
     def __call__(self, inputs: Union[dict, list] = None) -> dict:
-        """
-        Callable infer wrapper for CompiledModel. Look at `infer_new_request` for reference.
-        """
+        """Callable infer wrapper for CompiledModel. Look at `infer_new_request` for reference."""
         return self.infer_new_request(inputs)
 
 
 class AsyncInferQueue(AsyncInferQueueBase):
-    """
+    """AsyncInferQueue with pool of asynchronous requests.
+
     AsyncInferQueue represents helper that creates a pool of asynchronous
     InferRequests and provides synchronization functions to control flow of
     a simple pipeline.
@@ -187,8 +184,7 @@ class AsyncInferQueue(AsyncInferQueueBase):
     def start_async(
         self, inputs: Union[dict, list] = None, userdata: Any = None
     ) -> None:
-        """
-        Run asynchronous inference using next available InferRequest.
+        """Run asynchronous inference using next available InferRequest.
 
         :param inputs: Data to set on input tensors of next available InferRequest from
         AsyncInferQueue's pool.
@@ -207,8 +203,8 @@ class AsyncInferQueue(AsyncInferQueueBase):
 
 
 class Core(CoreBase):
-    """
-    Core class represents OpenVINO runtime Core entity.
+    """Core class represents OpenVINO runtime Core entity.
+
     User applications can create several Core class instances, but in this
     case the underlying plugins are created multiple times and not shared
     between several Core instances. The recommended way is to have a single
@@ -248,14 +244,7 @@ class ExtendedModel(CompiledModel):
 
 
 def compile_model(model_path: str) -> CompiledModel:
-    """
-    Compact method to compile model with AUTO plugin.
-
-    Parameters
-    ----------
-    model_path : str
-        Path to file with model.
-
+    """Compact method to compile model with AUTO plugin.
     :param model_path: Path to file with model.
     :type model_path: str
     :return: Extended version of `CompiledModel` that holds and
