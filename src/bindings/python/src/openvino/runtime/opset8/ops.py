@@ -474,7 +474,9 @@ def prior_box(
                                     Default value: True
                                     Required: no
     Example of attribute dictionary:
-    @code{.py}
+    
+    .. code-block:: python
+
         # just required ones
         attrs = {
             'offset': 85,
@@ -485,7 +487,7 @@ def prior_box(
             'clip': True,
             'fixed_size': [32, 64, 128]
         }
-    @endcode
+
     Optional attributes which are absent from dictionary will be set with corresponding default.
     """
     requirements = [
@@ -693,7 +695,9 @@ def detection_output(
                             Default value: 0
                             Required: no
     Example of attribute dictionary:
-    @code{.py}
+    
+    .. code-block:: python
+
         # just required ones
         attrs = {
             'keep_top_k': [1, 2, 3],
@@ -707,7 +711,7 @@ def detection_output(
             'input_height': [32],
             'input_width': [32],
         }
-    @endcode
+
     Optional attributes which are absent from dictionary will be set with corresponding default.
     """
     requirements = [

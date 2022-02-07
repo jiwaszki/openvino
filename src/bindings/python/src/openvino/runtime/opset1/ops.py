@@ -287,12 +287,12 @@ def clamp(
 
     Clamp uses the following logic:
 
-    @code{.py}
+    .. code-block:: python
+
         if data < min_value:
             data=min_value
         elif data > max_value:
             data=max_value
-    @endcode
     """
     return _get_node_factory_opset1().create(
         "Clamp", [as_node(data)], {"min": min_value, "max": max_value}
@@ -706,7 +706,8 @@ def detection_output(
                             Required: no
 
     Example of attribute dictionary:
-    @code{.py}
+    .. code-block:: python
+
         # just required ones
         attrs = {
             'num_classes': 85,
@@ -723,7 +724,6 @@ def detection_output(
             'input_height': [32],
             'input_width': [32],
         }
-    @endcode
 
     Optional attributes which are absent from dictionary will be set with corresponding default.
     """
@@ -862,14 +862,14 @@ def fake_quantize(
 
     Input floating point values are quantized into a discrete set of floating point values.
 
-    @code{.py}
+    .. code-block:: python
+
         if x <= input_low:
             output = output_low
         if x > input_high:
             output = output_high
         else:
             output = fake_quantize(output)
-    @endcode
 
     Fake quantize uses the following logic:
 
@@ -953,7 +953,8 @@ def gather_tree(
     and the parent beam indices.
     GatherTree uses the following logic:
 
-    @code{.py}
+    .. code-block:: python
+
         for batch in range(BATCH_SIZE):
             for beam in range(BEAM_WIDTH):
                 max_sequence_in_beam = min(MAX_TIME, max_seq_len[batch])
@@ -964,7 +965,6 @@ def gather_tree(
                     final_idx[level, batch, beam] = step_idx[level, batch, parent]
 
                     parent = parent_idx[level, batch, parent]
-    @endcode
     """
     node_inputs = as_nodes(step_ids, parent_idx, max_seq_len, end_token)
     return _get_node_factory_opset1().create("GatherTree", node_inputs)
@@ -1006,7 +1006,7 @@ def greater_equal(
                            auto-broadcasting of input tensors.
     :param name: The optional new name for output node.
     returns The node performing element-wise check whether left_node is greater than or equal
-             right_node.
+    right_node.
     """
     return _get_node_factory_opset1().create(
         "GreaterEqual", [left_node, right_node], {"auto_broadcast": auto_broadcast.upper()}
@@ -1150,9 +1150,9 @@ def hard_sigmoid(data: Node, alpha: NodeInput, beta: NodeInput, name: Optional[s
 
     Hard Sigmoid uses the following logic:
 
-    @code{.py}
+    .. code-block:: python
+
         y = max(0, min(1, alpha * data + beta))
-    @endcode
     """
     return _get_node_factory_opset1().create("HardSigmoid", [data, as_node(alpha), as_node(beta)])
 
@@ -1202,7 +1202,9 @@ def interpolate(
                         Required: no
 
     Example of attribute dictionary:
-    @code{.py}
+    
+    .. code-block:: python
+
         # just required ones
         attrs = {
             'axes': [2, 3],
@@ -1215,7 +1217,6 @@ def interpolate(
             'antialias': True,
             'pads_begin': [2, 2, 2],
         }
-    @endcode
     Optional attributes which are absent from dictionary will be set with corresponding default.
     """
     requirements = [
@@ -1830,12 +1831,12 @@ def prelu(data: NodeInput, slope: NodeInput, name: Optional[str] = None) -> Node
 
     PRelu uses the following logic:
 
-    @code{.py}
+    .. code-block:: python
+
         if data < 0:
             data = data * slope
         elif data >= 0:
             data = data
-    @endcode
     """
     return _get_node_factory_opset1().create("PRelu", as_nodes(data, slope))
 
@@ -1893,7 +1894,9 @@ def prior_box_clustered(
                     Required: no
 
     Example of attribute dictionary:
-    @code{.py}
+
+    .. code-block:: python
+
         # just required ones
         attrs = {
             'offset': 85,
@@ -1904,7 +1907,6 @@ def prior_box_clustered(
             'clip': False,
             'step_widths': [1.5, 2.0, 2.5]
         }
-    @endcode
 
     Optional attributes which are absent from dictionary will be set with corresponding default.
     """
@@ -2003,7 +2005,9 @@ def prior_box(
                         Required: no
 
     Example of attribute dictionary:
-    @code{.py}
+    
+    .. code-block:: python
+
         # just required ones
         attrs = {
             'offset': 85,
@@ -2015,7 +2019,6 @@ def prior_box(
             'clip': True,
             'fixed_size': [32, 64, 128]
         }
-    @endcode
 
     Optional attributes which are absent from dictionary will be set with corresponding default.
     """
@@ -2134,19 +2137,19 @@ def proposal(
 
     Example of attribute dictionary:
 
-    @code{.py}
-    # just required ones
-    attrs = {
-        'base_size': 85,
-        'pre_nms_topn': 10,
-        'post_nms_topn': 20,
-        'nms_thresh': 0.34,
-        'feat_stride': 16,
-        'min_size': 32,
-        'ratio': [0.1, 1.5, 2.0, 2.5],
-        'scale': [2, 3, 3, 4],
-    }
-    @endcode
+    .. code-block:: python
+
+        # just required ones
+        attrs = {
+            'base_size': 85,
+            'pre_nms_topn': 10,
+            'post_nms_topn': 20,
+            'nms_thresh': 0.34,
+            'feat_stride': 16,
+            'min_size': 32,
+            'ratio': [0.1, 1.5, 2.0, 2.5],
+            'scale': [2, 3, 3, 4],
+        }
 
     Optional attributes which are absent from dictionary will be set with corresponding default.
     """

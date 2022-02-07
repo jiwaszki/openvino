@@ -571,7 +571,8 @@ def shuffle_channels(data: Node, axis: int, group: int, name: Optional[str] = No
 
     For example:
 
-    @code{.py}
+    .. code-block:: ipython
+
         Inputs: tensor of shape [1, 6, 2, 2]
 
                 data = [[[[ 0.,  1.], [ 2.,  3.]],
@@ -592,7 +593,6 @@ def shuffle_channels(data: Node, axis: int, group: int, name: Optional[str] = No
                            [[ 4.,  5.], [ 6.,  7.]],
                            [[12., 13.], [14., 15.]],
                            [[20., 21.], [22., 23.]]]]
-    @endcode
     """
     return _get_node_factory_opset3().create(
         "ShuffleChannels", [as_node(data)], {"axis": axis, "group": group}

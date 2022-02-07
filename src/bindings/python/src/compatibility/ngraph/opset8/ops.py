@@ -508,6 +508,7 @@ def prior_box(
                                     Default value: True
                                     Required: no
     Example of attribute dictionary:
+
     .. code-block:: python
 
         # just required ones
