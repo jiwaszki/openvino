@@ -93,19 +93,12 @@ class InferRequest(InferRequestBase):
         Blocks all methods of InferRequest while request is running.
         Calling any method will lead to throwning exceptions.
 
-        Parameters
-        ----------
-        inputs : Union[dict[keys : values], list[values]], optional
-            Data to set on input tensors.
-
-            Keys can be one of `int`, `str` or `openvino.runtime.ConstOutput`.
-
-            Values can be either `numpy.array` or `openvino.runtime.Tensor`.
-
-        Returns
-        ----------
-        infer : dict[openvino.runtime.ConstOutput : numpy.array]
-            Dictionary of results from output tensors with ports as keys.
+        :param inputs: Data to set on input tensors.
+        Keys can be one of `int`, `str` or `openvino.runtime.ConstOutput`.
+        Values can be either `numpy.array` or `openvino.runtime.Tensor`.
+        :type inputs: Union[dict[keys : values], list[values]], optional
+        :return: Dictionary of results from output tensors with ports as keys.
+        :rtype: dict[openvino.runtime.ConstOutput : numpy.array]
         """
         return super().infer(
             {} if inputs is None else normalize_inputs(inputs, get_input_types(self))
@@ -120,21 +113,12 @@ class InferRequest(InferRequestBase):
         Calling any method while the request is running will lead to
         throwning exceptions.
 
-        Parameters
-        ----------
-        inputs : Union[dict[keys : values], list[values]], optional
-            Data to set on input tensors.
-
-            Keys can be one of `int`, `str` or `openvino.runtime.ConstOutput`.
-
-            Values can be either `numpy.array` or `openvino.runtime.Tensor`.
-
-        userdata : Any
-            Any data that will be passed inside callback call.                
-
-        Returns
-        ----------
-        start_async : None
+        :param inputs: Data to set on input tensors.
+        Keys can be one of `int`, `str` or `openvino.runtime.ConstOutput`.
+        Values can be either `numpy.array` or `openvino.runtime.Tensor`.
+        :type inputs: Union[dict[keys : values], list[values]], optional
+        :param userdata: Any data that will be passed inside callback call.
+        :type userdata: Any
         """
         super().start_async(
             {} if inputs is None else normalize_inputs(inputs, get_input_types(self)),
@@ -153,14 +137,8 @@ class CompiledModel(CompiledModelBase):
         Creates an inference request object used to infer the compiled model.
         The created request has allocated input and output tensors.
 
-        Parameters
-        ----------
-        None
-
-        Returns
-        ----------
-        create_infer_request : openvino.runtime.InferRequest
-            New InferRequest object.
+        :return: New InferRequest object.
+        :rtype: openvino.runtime.InferRequest
         """
         return InferRequest(super().create_infer_request())
 
@@ -173,19 +151,11 @@ class CompiledModel(CompiledModelBase):
         It is advised to use dedicated InferRequest class for performance,
         optimizing workflows and creating advanced pipelines.
 
-        Parameters
-        ----------
-        inputs : Union[dict[keys : values], list[values]], optional
-            Data to set on input tensors.
-
-            Keys can be one of `int`, `str` or `openvino.runtime.ConstOutput`.
-
-            Values can be either `numpy.array` or `openvino.runtime.Tensor`.
-
-        Returns
-        ----------
-        infer_new_request : dict[openvino.runtime.ConstOutput : numpy.array]
-            Dictionary of results from output tensors with ports as keys.
+        :param inputs: Data to set on input tensors.
+        Keys can be one of `int`, `str` or `openvino.runtime.ConstOutput`.
+        Values can be either `numpy.array` or `openvino.runtime.Tensor`.
+        :return: Dictionary of results from output tensors with ports as keys.
+        :rtype: dict[openvino.runtime.ConstOutput : numpy.array]
         """
         return super().infer_new_request(
             {} if inputs is None else normalize_inputs(inputs, get_input_types(self))
@@ -207,15 +177,10 @@ class AsyncInferQueue(AsyncInferQueueBase):
 
     def __getitem__(self, i: int) -> InferRequest:
         """
-        Parameters
-        ----------
-        i : int
-            InferRequest id. 
-
-        Returns
-        ----------
-        __getitem__ : openvino.runtime.InferRequest
-            InferRequests from the pool with given id.
+        :param i:  InferRequest id.
+        :type i: int
+        :return: InferRequests from the pool with given id.
+        :rtype: openvino.runtime.InferRequest
         """
         return InferRequest(super().__getitem__(i))
 
@@ -225,22 +190,11 @@ class AsyncInferQueue(AsyncInferQueueBase):
         """
         Run asynchronous inference using next available InferRequest.
 
-        Parameters
-        ----------
-        inputs : Union[dict[keys : values], list[values]], optional
-            Data to set on input tensors of next available InferRequest from
-            AsyncInferQueue's pool.
-
-            Keys can be one of `int`, `str` or `openvino.runtime.ConstOutput`.
-
-            Values can be either `numpy.array` or `openvino.runtime.Tensor`.
-
-        userdata : Any, optional
-            Any data that will be passed to a callback.
-
-        Returns
-        ----------
-        start_async : None
+        :param inputs: Data to set on input tensors of next available InferRequest from
+        AsyncInferQueue's pool.
+        :type inputs: Union[dict[keys : values], list[values]], optional
+        :param userdata: Any data that will be passed to a callback.
+        :type userdata: Any, optional
         """
         super().start_async(
             {}
@@ -302,11 +256,10 @@ def compile_model(model_path: str) -> CompiledModel:
     model_path : str
         Path to file with model.
 
-    Returns
-    ----------
-    compile_model : openvino.ie_api.ExtendedModel
-        Extended version of `CompiledModel` that holds and
-        keeps alive `Core` object. 
+    :param model_path: Path to file with model.
+    :type model_path: str
+    :return: Extended version of `CompiledModel` that holds and
+    keeps alive `Core` object. 
     """
     core = Core()
     return ExtendedModel(core, core.compile_model(model_path, "AUTO"))
@@ -318,26 +271,28 @@ class OVAny(OVAnyBase):
     Wrapper provides some useful overloads for simple built-in Python types.
 
     Access to the OVAny value is direct if it is a built-in Python data type.
-    Example:
-    @code{.py}
+    
+    :Example:
+    .. code-block:: ipython
+
         any = OVAny([1, 2])
         print(any[0])
 
         Output: 2
-    @endcode
+    
 
     Otherwise if OVAny value is a custom data type (for example user class),
     access to the value is possible by 'get()' method or property 'value'.
-    Example:
-    @code{.py}
+    :Example:
+    
+    .. code-block:: python
+
         class Test:
             def __init__(self):
                 self.data = "test"
 
         any = OVAny(Test())
         print(any.value.data)
-    @endcode
-
     """
 
     def __getitem__(self, key: Union[str, int]) -> Any:
