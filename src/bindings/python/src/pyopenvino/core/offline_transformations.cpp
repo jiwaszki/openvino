@@ -164,8 +164,9 @@ void regmodule_offline_transformations(py::module m) {
             :Examples:
             
             1. Default IR version:
+            
             .. code-block:: python
-                    
+                
                 shape = [2, 2]
                 parameter_a = ov.parameter(shape, dtype=np.float32, name="A")
                 parameter_b = ov.parameter(shape, dtype=np.float32, name="B")
@@ -176,6 +177,7 @@ void regmodule_offline_transformations(py::module m) {
                 serialize(func, model_path="./serialized.xml", weights_path="./serialized.bin")
 
             2. IR version 11:
+            
             .. code-block:: python
 
                 parameter_a = ov.parameter(shape, dtype=np.float32, name="A")
