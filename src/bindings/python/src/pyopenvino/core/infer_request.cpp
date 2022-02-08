@@ -241,6 +241,8 @@ void regclass_InferRequest(py::module m) {
             Waits for the result to become available. 
             Blocks until the result becomes available.
 
+            Function releases GIL, other threads can work while this function waits.
+
             :rtype: None
         )");
 
@@ -252,10 +254,11 @@ void regclass_InferRequest(py::module m) {
         },
         py::arg("timeout"),
         R"(
-            Waits for the result to become available. 
+            Waits for the result to become available.
             Blocks until specified timeout has elapsed or
             the result becomes available, whichever comes first.
 
+            Function releases GIL, other threads can work while this function waits.
 
             :param timeout: Maximum duration in milliseconds (ms) of blocking call.
             :type timeout: int
