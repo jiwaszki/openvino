@@ -37,6 +37,8 @@ from openvino.runtime.ie_api import InferRequest
 from openvino.runtime.ie_api import AsyncInferQueue
 from openvino.pyopenvino import Version
 from openvino.pyopenvino import Tensor
+from openvino.pyopenvino import RemoteContext
+from openvino.pyopenvino import RemoteTensor
 from openvino.pyopenvino import Extension
 from openvino.pyopenvino import ProfilingInfo
 from openvino.pyopenvino import get_batch
