@@ -547,6 +547,18 @@ void regclass_Core(py::module m) {
             :type extensions: list[openvino.runtime.Extension]
         )");
 
+    cls.def("get_default_context",
+            &ov::Core::get_default_context,
+            py::arg("device_name"),
+            R"(
+            Gets a default (plugin-supplied) shared context object for the specified accelerator device.
+
+            :param device_name: Name of a device to get a default shared context from.
+            :type device_name: str
+            :return: A default RemoteContext object.
+            :rtype: openvino.runtime.RemoteContext
+        )");
+
     cls.def_property_readonly("available_devices",
                               &ov::Core::get_available_devices,
                               py::call_guard<py::gil_scoped_release>(),
