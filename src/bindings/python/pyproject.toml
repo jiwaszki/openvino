@@ -1,3 +1,111 @@
+###
+# pdm project and project's dependencies
+###
+[project]
+name = "openvino"
+version = "2023.2"  # TODO: update automatically?
+requires-python = ">=3.7" # , <3.12"  # bump with old versions removal
+description = ""  # TODO: fill
+authors = [
+    {name = "OpenVINO", email = "openvino_pushbot@intel.com"},
+]  # TODO: check with legal?
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+# Runtime dependencies
+dependencies = [
+    "numpy>=1.16.6",
+    "singledispatchmethod; python_version<'3.8'",
+    "openvino-telemetry>=2023.1.0",
+    # "flake8==6.0.0",
+]
+
+# Optional dependencies
+[project.optional-dependencies]
+# [tool.pdm.dev-dependencies]  # will either need --dev or --prod usage
+linters = [
+    "black",
+    "flake8",
+    "flake8-annotations-complexity",
+    "flake8-broken-line",
+    "flake8-bugbear",
+    "flake8-class-attributes-order",
+    "flake8-comprehensions",
+    "flake8-debugger",
+    "flake8-docstrings",
+    "flake8-eradicate",
+    "flake8-executable",
+    "flake8-expression-complexity",
+    "flake8-print",
+    "flake8-pytest-style",
+    "flake8-rst-docstrings",
+    "flake8-string-format",
+    "flake8-variables-names",
+    "flake8_builtins",
+    "flake8_coding",
+    "flake8_commas",
+    "flake8_pep3101",
+    "flake8_quotes",
+    "mypy",
+    "Pep8-naming",
+    "pydocstyle",
+]
+tests = [
+    # "openvino[linters]",  # links not so good
+    "numpy>=1.16.6,<1.26",  # Range of numpy for testing
+    # Frontends:
+    "protobuf>=3.18.1,<4.0.0",
+    "onnx==1.14.1",
+    "torch",
+    "torchvision; platform_machine == 'arm64' and python_version >= '3.8'",
+    "torchvision; platform_machine != 'arm64'",
+    "sympy; platform_machine == 'arm64' and python_version >= '3.8'",
+    "sympy; platform_machine != 'arm64'",
+    "pillow",
+    # Testing:
+    "bandit",
+    "pytest>=5.0,<7.5",
+    "pytest-forked; sys_platform != 'win32'",
+    "pytest-xdist",
+    "pytest-html==3.2.0",
+    # utils:
+    "pygments>=2.8.1",
+    "py>=1.9.0",
+    "radon",
+    "retrying",
+    "singledispatchmethod",
+    "tox",
+    "types-pkg_resources",
+    "wheel >= 0.38.1",
+]
+# Build and wheel dependencies
+build = [
+    "cython >= 3.0.2",  # TODO: remove with API 1.0 removal
+    "setuptools >= 65.6.1",
+    "patchelf <= 0.17.2.1; sys_platform == 'linux' and platform_machine == 'x86_64'",
+    "wheel >= 0.38.1",
+]
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+###
+# Tools configs
+###
+[tool.pdm]
+plugins = [
+    "-e file:///${PROJECT_ROOT}/pdm-custom-plugins/"
+]
+
+[tool.pdm.scripts]
+ov-runtime-tests = "pytest ./tests/test_runtime/"  # try to add -s -v into cli!
+
 [tool.black]
 line-length = 160
 include = '\.pyi?$'

@@ -1,0 +1,21 @@
+[project]
+name = "pdm-custom-plugins"
+version = "0.0.0dev"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+dependencies = [
+    "pdm",
+]
+
+[project.entry-points.pdm]
+custom-install = "pdm_custom_install:register"
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
