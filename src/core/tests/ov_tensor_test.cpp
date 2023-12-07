@@ -23,6 +23,8 @@
 
 using OVTensorTest = ::testing::Test;
 
+const size_t string_size = ov::element::string.size();
+
 inline ov::Strides byteStrides(const ov::Strides& strides, const ov::element::Type& type) {
     ov::Strides byte_strides(strides.size());
     for (size_t i = 0; i < strides.size(); ++i)
@@ -55,7 +57,7 @@ TEST_F(OVTensorTest, canCreateStringTensor) {
     ASSERT_EQ(shape, t.get_shape());
     ASSERT_NE(shape, t.get_strides());
     ASSERT_EQ(byteStrides(ov::Strides({6, 2, 1}), t.get_element_type()), t.get_strides());
-    ASSERT_EQ(ov::element::string.size() * totalSize, t.get_byte_size());
+    ASSERT_EQ(string_size * totalSize, t.get_byte_size());
     ASSERT_THROW(t.data(ov::element::i64), ov::Exception);
     ASSERT_THROW(t.data<std::int32_t>(), ov::Exception);
 }
@@ -242,7 +244,7 @@ TEST_F(OVTensorTest, canAccessExternalDataStringTensor) {
         ASSERT_THROW(t.data<std::int16_t>(), ov::Exception);
         ASSERT_EQ(byteStrides(ov::row_major_strides(shape), t.get_element_type()), t.get_strides());
         ASSERT_EQ(ov::shape_size(shape), t.get_size());
-        ASSERT_EQ(ov::shape_size(shape) * ov::element::string.size(), t.get_byte_size());
+        ASSERT_EQ(ov::shape_size(shape) * string_size, t.get_byte_size());
     }
 }
 
@@ -261,8 +263,7 @@ TEST_F(OVTensorTest, canAccessExternalDataWithStrides) {
 TEST_F(OVTensorTest, canAccessExternalDataWithStridesStringTensor) {
     ov::Shape shape = {2, 3};
     std::string data[] = {"abdcd efg hi", "01234", "xyz  ", "   ", "$%&%&& (*&&", "", "\n ", "\t "};
-    ov::Strides strides = {shape[1] * ov::element::string.size() + ov::element::string.size(),
-                           ov::element::string.size()};
+    ov::Strides strides = {shape[1] * string_size + string_size, string_size};
     ov::Tensor t{ov::element::string, shape, data, strides};
     ASSERT_EQ(strides, t.get_strides());
     {
@@ -508,10 +509,7 @@ TEST_F(OVTensorTest, canChangeShapeOnStridedTensor) {
 
 TEST_F(OVTensorTest, canChangeShapeOnStridedTensorStringTensor) {
     std::string data[64 * 4];
-    ov::Tensor t{ov::element::string,
-                 {4, 2, 2},
-                 data,
-                 {8 * ov::element::string.size(), 3 * ov::element::string.size(), ov::element::string.size()}};
+    ov::Tensor t{ov::element::string, {4, 2, 2}, data, {8 * string_size, 3 * string_size, string_size}};
     const ov::Shape incorrect_shape({2, 2, 4});
     const ov::Shape correct_shape({1, 1, 2});
 
@@ -539,7 +537,7 @@ TEST_F(OVTensorTest, makeRangeRoiStringTensor) {
     ov::Tensor roi_tensor{t, {0, 0, 1, 2}, {1, 3, 5, 4}};
     ov::Shape ref_shape = {1, 3, 4, 2};
     ptrdiff_t ref_offset_elems = 7;
-    ptrdiff_t ref_offset_bytes = ref_offset_elems * ov::element::string.size();
+    ptrdiff_t ref_offset_bytes = ref_offset_elems * string_size;
     ov::Strides ref_strides = {90, 30, 5, 1};
     ASSERT_EQ(roi_tensor.get_shape(), ref_shape);
     ASSERT_EQ(roi_tensor.data<std::string>() - t.data<std::string>(), ref_offset_elems);
@@ -664,9 +662,9 @@ void compare_data(const ov::Tensor& src, const ov::Tensor& dst) {
     }
 };
 
-template <ov::element::Type_t T,
-          typename std_t = typename ov::element_type_traits<T>::value_type,
-          typename std::enable_if<T != ov::element::Type_t::string, bool>::type = true>
+template <ov::element::Type_t ET,
+          typename T = typename ov::element_type_traits<ET>::value_type,
+          typename std::enable_if<ET != ov::element::Type_t::string, bool>::type = true>
 void init_tensor(const ov::Tensor& tensor, bool input) {
     const auto origPtr = tensor.data<std_t>();
     ASSERT_NE(nullptr, origPtr);
@@ -680,6 +678,17 @@ template <ov::element::Type_t T,
           typename std::enable_if<T == ov::element::Type_t::string, bool>::type = true>
 void init_tensor(const ov::Tensor& tensor, bool input) {
     const auto origPtr = tensor.data<std_t>();
+    ASSERT_NE(nullptr, origPtr);
+    for (size_t i = 0; i < tensor.get_size(); ++i) {
+        origPtr[i] = std::to_string(i);
+    }
+}
+
+template <ov::element::Type_t ET,
+          typename T = typename ov::element_type_traits<ET>::value_type,
+          typename std::enable_if<ET == ov::element::Type_t::string, bool>::type = true>
+void init_tensor(const ov::Tensor& tensor, bool input) {
+    const auto origPtr = tensor.data<T>();
     ASSERT_NE(nullptr, origPtr);
     for (size_t i = 0; i < tensor.get_size(); ++i) {
         origPtr[i] = std::to_string(i);
@@ -845,6 +854,40 @@ INSTANTIATE_TEST_SUITE_P(copy_tests,
                                                               TestParams {
                                                                   ov::Shape{3, 2, 2}, ov::Strides{64, 16, 8},
                                                                   ov::Shape{3, 2, 2}, ov::Strides{128, 24, 8}
+                                                              },
+                                                              TestParams {
+                                                                  ov::Shape{}, {},
+                                                                  {}, {}
+                                                              },
+                                                              TestParams {
+                                                                  ov::Shape{1}, {},
+                                                                  {}, {}
+                                                              },
+                                                              TestParams {
+                                                                  ov::Shape{}, {},
+                                                                  {1}, {}
+                                                              }
+                                           )));
+
+INSTANTIATE_TEST_SUITE_P(copy_tests_strings,
+                         OVTensorTestCopy,
+                         ::testing::Combine(::testing::Values(ov::element::string),
+                                            ::testing::Values(
+                                                              TestParams {
+                                                                  ov::Shape{1, 3, 4, 8}, {},
+                                                                  {0}, {}
+                                                              },
+                                                              TestParams {
+                                                                  ov::Shape{3, 2, 2}, {},
+                                                                  ov::Shape{3, 2, 2}, ov::Strides{16 * string_size, 3 * string_size, string_size}
+                                                              },
+                                                              TestParams {
+                                                                  ov::Shape{3, 2, 2}, ov::Strides{8 * string_size, 2 * string_size, string_size},
+                                                                  ov::Shape{3, 2, 2}, ov::Strides{}
+                                                              },
+                                                              TestParams {
+                                                                  ov::Shape{3, 2, 2}, ov::Strides{8 * string_size, 2 * string_size, string_size},
+                                                                  ov::Shape{3, 2, 2}, ov::Strides{16 * string_size, 3 * string_size, string_size}
                                                               },
                                                               TestParams {
                                                                   ov::Shape{}, {},

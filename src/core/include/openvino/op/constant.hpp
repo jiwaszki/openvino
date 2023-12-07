@@ -70,19 +70,22 @@ public:
     template <typename T>
     Constant(const element::Type_t& type, const Shape& shape, const std::vector<T>& values)
         : Constant(false, type, shape) {
+        const auto this_shape_size = shape_size(m_shape);
+        const auto values_size = values.size();
+        const auto has_single_value = (values_size == 1);
         NODE_VALIDATION_CHECK(this,
-                              values.size() == 1 || values.size() == shape_size(m_shape),
+                              has_single_value || values_size == this_shape_size,
                               "Did not get the expected number of literals for a constant of shape ",
                               m_shape,
                               " (got ",
-                              values.size(),
+                              values_size,
                               ", expected ",
-                              (shape_size(m_shape) == 1 ? "" : "1 or "),
-                              shape_size(m_shape),
+                              (this_shape_size == 1 ? "" : "1 or "),
+                              this_shape_size,
                               ").");
 
-        if (values.size() == 1) {
-            fill_data(type, values.front());
+        if (has_single_value) {
+            fill_data(type, values[0]);
         } else {
             write_values(values);
         }
@@ -522,7 +525,13 @@ private:
         auto output_size = std::min(num_elements, shape_size(m_shape));
         output_vector.reserve(output_size);
         const auto p = get_data_ptr<Type>();
-        std::copy(p, p + output_size, std::back_inserter(output_vector));
+        std::copy_n(p, output_size, std::back_inserter(output_vector));
+    }
+
+    template <element::Type_t Type, typename std::enable_if<Type != element::Type_t::string, bool>::type = true>
+    void cast_vector(std::vector<std::string>& output_vector, size_t num_elements) const {
+        OPENVINO_THROW("cast_vector does not support casting ov::Tensor of type " +
+                       ov::element::Type(Type).to_string() + "to std::vector of std::string elements");
     }
 
     template <element::Type_t Type,
@@ -530,9 +539,8 @@ private:
               typename std::enable_if<Type == element::Type_t::string, bool>::type = true>
     void cast_vector(std::vector<OUT_T>& output_vector, size_t num_elements) const {
         auto output_type = std::string(typeid(OUT_T{}).name());
-        OPENVINO_ASSERT(false,
-                        "cast_vector does not support casting string ov::Tensor to std::vector with elements of type " +
-                            output_type);
+        OPENVINO_THROW("cast_vector does not support casting string ov::Tensor to std::vector with elements of type " +
+                       output_type);
     }
 
     template <element::Type_t Type,
@@ -649,7 +657,7 @@ private:
     template <element::Type_t Type, typename std::enable_if<Type == element::Type_t::string, bool>::type = true>
     void fill_data(const std::string& value) {
         auto num_elements = shape_size(m_shape);
-        std::fill_n(get_data_ptr_nc<Type>(), num_elements, value);
+        std::uninitialized_fill_n(get_data_ptr_nc<Type>(), num_elements, value);
     }
 
     template <element::Type_t Type,
@@ -658,8 +666,7 @@ private:
               typename std::enable_if<Type == element::Type_t::string, bool>::type = true>
     void fill_data(const T& value) {
         std::string type_name(typeid(value).name());
-        OPENVINO_ASSERT(false,
-                        "fill_data does not support to fill ov::Tensor of string type with value of " + type_name);
+        OPENVINO_THROW("fill_data does not support to fill ov::Tensor of string type with value of " + type_name);
     }
 
     template <element::Type_t Type,
@@ -721,14 +728,13 @@ private:
         // elements of string ov::Tensor is already pre-initialized in allocate_buffer
         auto p = get_data_ptr_nc<Type>();
         auto num_elements = std::min(shape_size(m_shape), source.size());
-        std::copy_n(source.begin(), num_elements, p);
+        std::uninitialized_copy_n(source.begin(), num_elements, p);
     }
 
     template <element::Type_t Type, typename std::enable_if<Type != element::Type_t::string, bool>::type = true>
     void write_buffer(const std::vector<std::string>& source) {
-        OPENVINO_ASSERT(false,
-                        "write_buffer does not support writing std::string elements into ov::Tensor of type:" +
-                            ov::element::Type(Type).to_string());
+        OPENVINO_THROW("write_buffer does not support writing std::string elements into ov::Tensor of type:" +
+                       ov::element::Type(Type).to_string());
     }
 
     template <element::Type_t Type,
@@ -737,9 +743,8 @@ private:
     void write_buffer(const std::vector<T>& source) {
         if (source.size() > 0) {
             auto source_type = std::string(typeid(source[0]).name());
-            OPENVINO_ASSERT(
-                false,
-                "write_buffer does not support writing elements of type " + source_type + " into string ov::Tensor");
+            OPENVINO_THROW("write_buffer does not support writing elements of type " + source_type +
+                           " into string ov::Tensor");
         }
     }
 
@@ -888,6 +893,16 @@ private:
 #    pragma GCC diagnostic pop
 #endif
     }
+
+    template <class T>
+    void fill_or_write(const bool fill, const element::Type& et, const std::vector<T>& values) {
+        if (fill) {
+            fill_data(et, values[0]);
+        } else {
+            write_values(values);
+        }
+    }
+
     template <ov::element::Type_t Type,
               typename ValueT,
               typename std::enable_if<Type == ov::element::Type_t::u4 || Type == ov::element::Type_t::u4 ||
