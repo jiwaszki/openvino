@@ -1,13 +1,11 @@
 Video Super Resolution with OpenVINO™
 =====================================
 
-
-
 Super Resolution is the process of enhancing the quality of an image by
 increasing the pixel count using deep learning. This notebook applies
 Single Image Super Resolution (SISR) to frames in a 360p (480×360) video
 in 360p resolution. A model called
-`single-image-super-resolution-1032 <https://docs.openvino.ai/2023.1/omz_models_model_single_image_super_resolution_1032.html>`__,
+`single-image-super-resolution-1032 <https://docs.openvino.ai/2023.0/omz_models_model_single_image_super_resolution_1032.html>`__,
 which is available in Open Model Zoo, is used in this tutorial. It is
 based on the research paper cited below.
 
@@ -22,10 +20,7 @@ pp. 2777-2784, doi: 10.1109/ICPR.2018.8545760.
    demo is not optimized for a video. Results may vary depending on the
    video.
 
-
-.. _top:
-
-**Table of contents**:
+**Table of contents:**
 
 - `Preparation <#preparation>`__
 
@@ -45,19 +40,19 @@ pp. 2777-2784, doi: 10.1109/ICPR.2018.8545760.
   - `Do Inference <#do-inference>`__
   - `Show Side-by-Side Video of Bicubic and Superresolution Version <#show-side-by-side-video-of-bicubic-and-superresolution-version>`__
 
-Preparation `⇑ <#top>`__
+Preparation
 ###############################################################################################################################
 
-Install requirements `⇑ <#top>`__
+Install requirements
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 .. code:: ipython3
 
-    !pip install -q "openvino>=2023.0.0"
+    !pip install -q "openvino==2023.1.0.dev20230811"
     !pip install -q opencv-python
     !pip install -q "pytube>=12.1.0"
 
-Imports `⇑ <#top>`__
+Imports
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 .. code:: ipython3
@@ -76,7 +71,7 @@ Imports `⇑ <#top>`__
         clear_output,
         display,
     )
-    from openvino.runtime import Core
+    import openvino as ov
     from pytube import YouTube
 
 .. code:: ipython3
@@ -88,10 +83,10 @@ Imports `⇑ <#top>`__
         path.parent.mkdir(parents=True, exist_ok=True)
         urllib.request.urlretrieve(url, path)
 
-Settings `⇑ <#top>`__
+Settings
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-Select inference device `⇑ <#top>`__
+Select inference device
 -------------------------------------------------------------------------------------------------------------------------------
 
 Select device from dropdown list for running inference using OpenVINO:
@@ -100,7 +95,7 @@ Select device from dropdown list for running inference using OpenVINO:
 
     import ipywidgets as widgets
     
-    core = Core()
+    core = ov.Core()
     device = widgets.Dropdown(
         options=core.available_devices + ["AUTO"],
         value='AUTO',
@@ -148,7 +143,7 @@ Select device from dropdown list for running inference using OpenVINO:
     single-image-super-resolution-1032 already downloaded to model
 
 
-Functions `⇑ <#top>`__
+Functions
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 .. code:: ipython3
@@ -167,15 +162,15 @@ Functions `⇑ <#top>`__
         result = result.astype(np.uint8)
         return result
 
-Load the Superresolution Model `⇑ <#top>`__
+Load the Superresolution Model
 ###############################################################################################################################
 
-Load the model in OpenVINO Runtime with ``ie.read_model`` and compile it
-for the specified device with ``ie.compile_model``.
+Load the model in OpenVINO Runtime with ``core.read_model`` and compile
+it for the specified device with ``core.compile_model``.
 
 .. code:: ipython3
 
-    core = Core()
+    core = ov.Core()
     model = core.read_model(model=model_xml_path)
     compiled_model = core.compile_model(model=model, device_name=device.value)
 
@@ -216,7 +211,7 @@ resolution version of the image in 1920x1080.
     The image sides are upsampled by a factor of 4. The new image is 16 times as large as the original image
 
 
-Superresolution on Video `⇑ <#top>`__
+Superresolution on Video
 ###############################################################################################################################
 
 Download a YouTube video with ``PyTube`` and enhance the video quality
@@ -231,8 +226,7 @@ By default, only the first 100 frames of the video are processed. Change
    should be a landscape video and have an input resolution of 360p
    (640x360) for the 1032 model, or 480p (720x480) for the 1033 model.
 
-
-Settings `⇑ <#top>`__
+Settings
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 .. code:: ipython3
@@ -246,7 +240,7 @@ Settings `⇑ <#top>`__
     # If you have FFMPEG installed, you can change FOURCC to `*"THEO"` to improve video writing speed.
     FOURCC = cv2.VideoWriter_fourcc(*"vp09")
 
-Download and Prepare Video `⇑ <#top>`__
+Download and Prepare Video
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 .. code:: ipython3
@@ -333,7 +327,7 @@ the superresolution side by side.
         frameSize=(target_width * 2, target_height),
     )
 
-Do Inference `⇑ <#top>`__
+Do Inference
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 Read video frames and enhance them with superresolution. Save the
@@ -450,16 +444,16 @@ video.
 
 .. parsed-literal::
 
-    Processed frame 100. Inference time: 0.06 seconds (16.26 FPS)
+    Processed frame 100. Inference time: 0.05 seconds (19.34 FPS)
 
 
 .. parsed-literal::
 
     Video's saved to output directory.
-    Processed 100 frames in 235.27 seconds. Total FPS (including video processing): 0.43. Inference FPS: 17.68.
+    Processed 100 frames in 235.00 seconds. Total FPS (including video processing): 0.43. Inference FPS: 17.29.
 
 
-Show Side-by-Side Video of Bicubic and Superresolution Version. `⇑ <#top>`__
+Show Side-by-Side Video of Bicubic and Superresolution Version
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 .. code:: ipython3

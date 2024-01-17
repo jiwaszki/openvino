@@ -1,33 +1,31 @@
-###
-# pdm project and project's dependencies
-###
 [project]
-name = "openvino"
-version = "2023.2"  # TODO: update automatically?
-requires-python = ">=3.7" # , <3.12"  # bump with old versions removal
-description = ""  # TODO: fill
-authors = [
-    {name = "OpenVINO", email = "openvino_pushbot@intel.com"},
-]  # TODO: check with legal?
+version = "2023.3"  # TODO: update automatically?
+requires-python = ">=3.8"  # , <3.12"
 classifiers = [
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.11"
 ]
-# Runtime dependencies
+# TODO:
+# description = ""
+# readme = "README.md"
+# authors = [
+#     {name = "OpenVINO", email = "openvino_pushbot@intel.com"},
+# ]
+# license = {text = ""}
+# classifiers = [
+#     "License :: ",
+#     ...
+# ]
 dependencies = [
-    "numpy>=1.16.6",
-    "singledispatchmethod; python_version<'3.8'",
-    "openvino-telemetry>=2023.1.0",
-    # "flake8==6.0.0",
+    "numpy >= 1.22.4",
+    "openvino-telemetry >= 2023.0",
 ]
 
-# Optional dependencies
-[project.optional-dependencies]
 # [tool.pdm.dev-dependencies]  # will either need --dev or --prod usage
+[project.optional-dependencies]
 linters = [
     "black",
     "flake8",
@@ -56,9 +54,8 @@ linters = [
     "pydocstyle",
 ]
 tests = [
-    # "openvino[linters]",  # links not so good
-    "numpy>=1.16.6,<1.26",  # Range of numpy for testing
-    # Frontends:
+    "numpy>=1.22.4,<1.26",  # Range of numpy for testing
+    # Frontends: TBD split of them
     "protobuf>=3.18.1,<4.0.0",
     "onnx==1.14.1",
     "torch",
@@ -73,17 +70,16 @@ tests = [
     "pytest-forked; sys_platform != 'win32'",
     "pytest-xdist",
     "pytest-html==3.2.0",
-    # utils:
+    # Utils:
     "pygments>=2.8.1",
     "py>=1.9.0",
     "radon",
     "retrying",
-    "singledispatchmethod",
     "tox",
     "types-pkg_resources",
     "wheel >= 0.38.1",
 ]
-# Build and wheel dependencies
+# Build and wheel dependencies:
 build = [
     "cython >= 3.0.2",  # TODO: remove with API 1.0 removal
     "setuptools >= 65.6.1",
@@ -94,14 +90,12 @@ build = [
 [build-system]
 requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
-
 ###
 # Tools configs
 ###
 [tool.pdm]
 plugins = [
     "-e file:///${PROJECT_ROOT}/pdm-custom-plugins/"
-]
 
 [tool.pdm.scripts]
 ov-runtime-tests = "pytest ./tests/test_runtime/"  # try to add -s -v into cli!

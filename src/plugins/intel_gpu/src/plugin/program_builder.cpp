@@ -158,7 +158,7 @@ std::shared_ptr<cldnn::program> ProgramBuilder::build(const std::vector<std::sha
         OV_ITT_SCOPED_TASK(itt::domains::intel_gpu_plugin, "ProgramBuilder::CreateProgram");
         cldnn::program::ptr program;
         try {
-            program = cldnn::program::build_program(m_engine, *m_topology, m_config, get_task_executor());
+            program = cldnn::program::build_program(m_engine, *m_topology, m_config, get_task_executor(), false, false, is_inner_program);
         } catch (std::exception& e) {
             OPENVINO_ASSERT(false, "[GPU] ProgramBuilder build failed!\n", e.what());
         }
@@ -312,6 +312,14 @@ void ProgramBuilder::add_primitive(const ov::Node& op, std::shared_ptr<cldnn::pr
 bool ProgramBuilder::requires_new_shape_infer(const ov::Node& op) const {
     if (op.is_dynamic()) {
         return true;
+    }
+
+    // When input node has dynamic shape with 4 dimension, this function return false
+    // because op.is_dynamic() which only checks input shapes return false.
+    // So, in the case of input data, we need to check output shape.
+    for (size_t i = 0; i < op.get_output_size(); i++) {
+        if (op.get_output_partial_shape(i).is_dynamic())
+            return true;
     }
 
     if (ov::is_type<op::FullyConnectedCompressed>(&op))
